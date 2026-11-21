@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         val app = application as AshstrideApp
         setContent {
             AshstrideTheme {
-                HomeScreen(app.db)
+                HomeScreen(app)
             }
         }
     }

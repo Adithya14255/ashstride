@@ -16,6 +16,14 @@ interface DayDao {
     @Query("SELECT COUNT(*) FROM day_entry")
     suspend fun count(): Int
 
+    /** Rows with date in [from, to] (yyyy-MM-dd strings sort chronologically). */
+    @Query("SELECT * FROM day_entry WHERE date >= :from AND date <= :to")
+    suspend fun getRange(from: String, to: String): List<DayEntry>
+
+    /** Newest date held with the given source, or null. Used to find where imported history ends. */
+    @Query("SELECT MAX(date) FROM day_entry WHERE source = :source")
+    suspend fun newestDateBySource(source: String): String?
+
     @Query("SELECT * FROM day_entry ORDER BY date DESC")
     fun observeAll(): Flow<List<DayEntry>>
 

@@ -5,6 +5,7 @@ Paste SPEC.md and this file at the start of every new session.
 ## Done
 - **Session 1 (build 0.1.0):** Gradle project, version catalog, ash/ember Compose theme, Room schema (day_entry, xp_event, challenge_week, badge_unlock, inventory, mend_log), one-time seed of 505 days, placeholder streak counter on Home, fixed debug keystore, GitHub Actions workflow producing the APK.
 - **Session 2 (build 0.2.0):** pure-Kotlin rules engine in `com.ashstride.app.domain` plus JUnit tests. No UI or database changes; Home still uses the Session 1 `SimpleStreak` and looks identical.
+- **Session 3 (build 0.3.0, written, NOT yet compiled or installed):** Health Connect sync in `com.ashstride.app.sync`: aggregate-API daily steps + distance, manual entries subtracted, changes token, WorkManager every 30 min, permission flow + rationale screen, Health Connect card on Home. `SimpleStreak` still drives Home. CI unit tests are now a hard gate (continue-on-error removed). 16 new tests in `SyncPlannerTest` (expected total 88).
 
 ## Verified
 - Session 1 build compiles in GitHub Actions and installs on the OnePlus 12. Home shows the seeded history.
@@ -14,11 +15,12 @@ Paste SPEC.md and this file at the start of every new session.
   workflow uses checkout@v5 and setup-java@v5, gradle/libs.versions.toml added by hand.
 - Repo: github.com/Adithya14255/ashstride (public).
 
-## Remaining CI cleanup from Session 2
-- Remove `continue-on-error: true` from the `Run unit tests` step in `.github/workflows/build-apk.yml` so unit test failures act as a hard gate.
+## To verify after pushing Session 3
+- CI green with 88 tests (72 old + 16 `SyncPlannerTest`). Paste red lines into the next session if not. No compiler was available when this was written, so a first-build compile error is possible.
+- Install over 0.2.0 (same key, data kept). Home shows the old numbers plus a Health Connect card. Tap Allow access, grant all four, card should say Synced and today's row appears (days loaded 506, steps rise by today's count).
 
-## Expected on first install (0.2.0)
-Identical to 0.1.0: streak **118**, days loaded **505**, total steps **6,406,335**, total distance **4,932 km**, goal chip **Goal 10,000**. (The new engine is not wired into the UI until Session 4.)
+## Expected on first install (0.3.0)
+Before granting access: same as 0.2.0 (streak 118, days 505, steps 6,406,335, 4,932 km, Goal 10,000) plus the Health Connect card. After granting: days loaded becomes 506 (today's row, source HEALTH_CONNECT) and total steps grow by today's steps. The streak on Home may read 119 once today passes 10,000 steps (SimpleStreak counts today).
 
 ## Session 2 results on the imported history (as of 2026-11-21)
 - Streaks: pure 118, total 118, best pure 132, best total 132.
@@ -50,8 +52,18 @@ Identical to 0.1.0: streak **118**, days loaded **505**, total steps **6,406,335
 - Weekly cards: week is Saturday-Friday, anchor Saturday 2025-07-05, every 4th week (index % 4 == 3) the Hard card is Legendary. Targets = spec defaults x goal scale x an adaptation factor from the last 8 full weeks (average / 85,000, clamped 0.9-1.15), rounded to 1,000. Card type rotates week by week; Continuous Run is only offered when hourly data exists. Distance target = step target x 0.00075 km.
 - Offers are deterministic for the same inputs, so reopening never reshuffles; Session 5 must still store them in `challenge_week.offersJson`.
 
-## Next: Session 3 (Health Connect)
-Read steps + distance via aggregate API, exclude manual entries, WorkManager sync with change tokens, history permission (older than 30 days) and rationale screen, write rows into `day_entry` with source HEALTH_CONNECT. Keep `SimpleStreak` until Session 4 swaps Home to `Progress.compute`.
+## Session 3 decisions (not in SPEC.md; change here if you disagree)
+- Imported history wins: HC writes only days after the newest IMPORTED day (2026-11-21 onward today), never overwrites an IMPORTED row, never changes a row's goal or mended flag. New rows get the current goal (`SyncPrefs.goal`, default 10,000; no UI to change it yet, Session 7 settings).
+- Manual entries: aggregate total minus manual-entry records, attributed to the record's start day. Approximation if a manual record overlaps a real one.
+- Token taken before reading. Any deletion re-reads the trailing 30 days (deletions carry no date). Expired token or first run = full window resync. Quiet days still get a 0-step row.
+- Permissions requested together: steps, distance, history, background. Only steps + distance are required; history is floored to 30 days if missing; the 30-minute WorkManager job skips unless background permission is granted, and Home syncs on every open.
+- Distance: sums HC distance, so a day's km comes from whatever app writes distance.
+- Hourly data is not stored yet (needed for Continuous Run in Session 5; ChallengeGenerator gets `hourlyAvailable=false` until then).
+- Write-back to Health Connect not built (stays off).
+
+## Next: Session 4 (Home, Streak, Stats)
+Swap Home from `SimpleStreak` to `Progress.compute`; ring, flame, XP bar, tier emblem; Streak calendar; Stats screen. Navigation shell for all screens.
 
 ## Open items
 - Tier art, emblem looks and badge art are still to come (Session 6).
+- Goal selector UI not built yet; goal is stored in `SyncPrefs` only.
