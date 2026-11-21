@@ -29,3 +29,21 @@ jobs:
           name: ashstride-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      # Rules-engine unit tests (Session 2). They run after the APK is built and uploaded, and
+      # do not fail the build, so a test problem can never block an install. Once they have
+      # passed, delete the "continue-on-error" line to make them a hard gate.
+      - name: Run unit tests
+        id: unit-tests
+        continue-on-error: true
+        run: gradle :app:testDebugUnitTest --no-daemon --stacktrace
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: |
+            app/build/reports/tests/testDebugUnitTest
+            app/build/test-results/testDebugUnitTest
+          if-no-files-found: ignore
