@@ -1,0 +1,23 @@
+package com.ashstride.app
+
+import android.app.Application
+import androidx.room.Room
+import com.ashstride.app.data.db.AshDatabase
+import com.ashstride.app.sync.HealthSync
+import com.ashstride.app.sync.SyncScheduler
+import com.ashstride.app.ui.AppModel
+
+class AshstrideApp : Application() {
+    val db: AshDatabase by lazy {
+        Room.databaseBuilder(this, AshDatabase::class.java, "ashstride.db")
+            .addMigrations(AshDatabase.MIGRATION_1_2)
+            .build()
+    }
+    val healthSync: HealthSync by lazy { HealthSync(this, db) }
+    val model: AppModel by lazy { AppModel(this) }
+
+    override fun onCreate() {
+        super.onCreate()
+        SyncScheduler.schedule(this)
+    }
+}

@@ -1,0 +1,246 @@
+{
+  "title": "The Road From The Ashes",
+  "premise": "A wanderer wakes in the ashes and walks toward a far fire that never went out. Every step feeds the flame.",
+  "routeKm": 12000,
+  "chapters": [
+    {
+      "id": "c1",
+      "title": "The Ashen Plain",
+      "startKm": 0,
+      "endKm": 900,
+      "intro": "Grey flats where the last fire died. Every step here is the first one."
+    },
+    {
+      "id": "c2",
+      "title": "Cinderwood",
+      "startKm": 900,
+      "endKm": 2200,
+      "intro": "A burnt forest that remembers the heat. Embers still glow under the roots."
+    },
+    {
+      "id": "c3",
+      "title": "The Salt Roads",
+      "startKm": 2200,
+      "endKm": 3800,
+      "intro": "White highways laid by travellers long gone. Wind scours them clean."
+    },
+    {
+      "id": "c4",
+      "title": "The Glass Hills",
+      "startKm": 3800,
+      "endKm": 5400,
+      "intro": "Lightning once struck here and never stopped. The ground rings underfoot."
+    },
+    {
+      "id": "c5",
+      "title": "The Drowned Spires",
+      "startKm": 5400,
+      "endKm": 7600,
+      "intro": "Towers wade in black water. Something below keeps the bells."
+    },
+    {
+      "id": "c6",
+      "title": "The Long Dark",
+      "startKm": 7600,
+      "endKm": 9800,
+      "intro": "No sun for a month of walking. Your flame is the only lamp."
+    },
+    {
+      "id": "c7",
+      "title": "The Sunward Stair",
+      "startKm": 9800,
+      "endKm": 12000,
+      "intro": "Terraces climb toward a light you can finally see."
+    }
+  ],
+  "waypoints": [
+    {
+      "km": 0,
+      "name": "Cold Hearth",
+      "text": "The ashes where you woke. The hearthstones are still warm.",
+      "chapter": "c1"
+    },
+    {
+      "km": 220,
+      "name": "Cinder Gate",
+      "text": "A broken arch. Beyond it, the road begins.",
+      "chapter": "c1"
+    },
+    {
+      "km": 600,
+      "name": "The Hollow Well",
+      "text": "The water is dry but the stones hum when you drop an ember in.",
+      "chapter": "c1"
+    },
+    {
+      "km": 900,
+      "name": "Edge of Cinderwood",
+      "text": "Black trunks stand like pillars. The air smells of old smoke.",
+      "chapter": "c2"
+    },
+    {
+      "km": 1300,
+      "name": "Charred Chapel",
+      "text": "A roofless shrine. Someone left a lantern burning here.",
+      "chapter": "c2"
+    },
+    {
+      "km": 1750,
+      "name": "Lantern Glade",
+      "text": "Hundreds of glass lanterns hang from the branches, all dark.",
+      "chapter": "c2"
+    },
+    {
+      "km": 2100,
+      "name": "The Woodcutter's Rest",
+      "text": "A cabin with two chairs. One is still warm.",
+      "chapter": "c2"
+    },
+    {
+      "km": 2200,
+      "name": "Saltgate",
+      "text": "The road turns white and the forest ends at a line.",
+      "chapter": "c3"
+    },
+    {
+      "km": 2750,
+      "name": "The Pale Caravan",
+      "text": "Wagons, frozen mid-journey, loaded with salt and silence.",
+      "chapter": "c3"
+    },
+    {
+      "km": 3300,
+      "name": "Mirror Flats",
+      "text": "The sky lies on the ground. You walk across clouds.",
+      "chapter": "c3"
+    },
+    {
+      "km": 3800,
+      "name": "Foot of the Glass Hills",
+      "text": "The first slope glitters like a field of knives.",
+      "chapter": "c4"
+    },
+    {
+      "km": 4300,
+      "name": "The Singing Shard",
+      "text": "A tall crystal that hums your footsteps back to you.",
+      "chapter": "c4"
+    },
+    {
+      "km": 4800,
+      "name": "Hermit's Kiln",
+      "text": "A smith who has not spoken in years offers a seat by the fire.",
+      "chapter": "c4"
+    },
+    {
+      "km": 5150,
+      "name": "The Glass Overlook",
+      "text": "From here you can see the water that waits below.",
+      "chapter": "c4"
+    },
+    {
+      "km": 5400,
+      "name": "The Drowned Stair",
+      "text": "Steps descend into black water. The road goes on underneath.",
+      "chapter": "c5"
+    },
+    {
+      "km": 6200,
+      "name": "Bellfall",
+      "text": "A tower of bells, every one cracked, all still ringing softly.",
+      "chapter": "c5"
+    },
+    {
+      "km": 6900,
+      "name": "The Sunken Library",
+      "text": "Shelves under water. The books are dry.",
+      "chapter": "c5"
+    },
+    {
+      "km": 7600,
+      "name": "Lastlight Pass",
+      "text": "The sun sets behind the mountains and does not rise again.",
+      "chapter": "c6"
+    },
+    {
+      "km": 8400,
+      "name": "The Quiet Mile",
+      "text": "Sound stops. Your heartbeat is the only thing left.",
+      "chapter": "c6"
+    },
+    {
+      "km": 9100,
+      "name": "Wolfmoon Camp",
+      "text": "A circle of stones. Others have waited out the dark here.",
+      "chapter": "c6"
+    },
+    {
+      "km": 9800,
+      "name": "Foot of the Sunward Stair",
+      "text": "Dawn at last, thin and gold on the highest steps.",
+      "chapter": "c7"
+    },
+    {
+      "km": 10700,
+      "name": "Ember Terraces",
+      "text": "Gardens of living coals climb the mountainside.",
+      "chapter": "c7"
+    },
+    {
+      "km": 11400,
+      "name": "The Last Shrine",
+      "text": "One more shrine, where the road asks what you came for.",
+      "chapter": "c7"
+    },
+    {
+      "km": 12000,
+      "name": "The First Flame",
+      "text": "Where all fires began. It has been waiting for you.",
+      "chapter": "c7"
+    }
+  ],
+  "scenes": [
+    {
+      "chapter": "c1",
+      "arrive": "The shrine is a ring of cold stones. Three sealed cards wait on the altar.",
+      "lost": "The ashes swallow the week. The stones are patient.",
+      "won": "You press the last ember into the stone. The plain grows a little warmer."
+    },
+    {
+      "chapter": "c2",
+      "arrive": "Charred beams frame the shrine. Three cards lie sealed among the cinders.",
+      "lost": "The forest forgets this week. It will wait for your return.",
+      "won": "Sparks leap from the cards into the dead branches. Something stirs."
+    },
+    {
+      "chapter": "c3",
+      "arrive": "A salt-white altar under open sky. Three cards, sealed in wax.",
+      "lost": "The wind scours the week away. Try again.",
+      "won": "The salt glitters as the card burns. The road feels shorter."
+    },
+    {
+      "chapter": "c4",
+      "arrive": "The shrine hums, a shard of glass at its heart. Three cards wait.",
+      "lost": "The glass goes dull. The hills do not hold grudges.",
+      "won": "The shard rings out. The whole hillside answers."
+    },
+    {
+      "chapter": "c5",
+      "arrive": "The shrine stands above the waterline. Three sealed cards drip in the dark.",
+      "lost": "The water takes the week. The bells keep time without you.",
+      "won": "The bells ring once for you. The water stills."
+    },
+    {
+      "chapter": "c6",
+      "arrive": "Your flame lights the shrine. Three cards, sealed against the dark.",
+      "lost": "The dark grows heavier this week. Your flame holds.",
+      "won": "The dark leans back from the light. Just a little."
+    },
+    {
+      "chapter": "c7",
+      "arrive": "The shrine glows gold. Three sealed cards wait in the light.",
+      "lost": "Even here a week can slip. The stair does not mind.",
+      "won": "The cards burn bright. The summit seems closer."
+    }
+  ]
+}
