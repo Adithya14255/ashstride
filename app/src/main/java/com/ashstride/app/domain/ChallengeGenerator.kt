@@ -1,0 +1,223 @@
+package com.ashstride.app.domain
+
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+
+enum class BadgeRim { BRONZE, SILVER, GOLD, PRISMATIC }
+
+enum class ChallengeTier(val baseXp: Int, val shards: Int, val rim: BadgeRim) {
+    EASY(300, 0, BadgeRim.BRONZE),
+    MEDIUM(700, 0, BadgeRim.SILVER),
+    HARD(1_500, 1, BadgeRim.GOLD),
+    LEGENDARY(3_000, 2, BadgeRim.PRISMATIC),
+}
+
+enum class ChallengeType {
+    /** Most steps over the Saturday-to-Friday week. */
+    WEEKLY_TOTAL,
+    /** At least [Challenge.targetDays] days of [Challenge.targetSteps] or more. */
+    DAYS_ABOVE,
+    /** One single day of [Challenge.targetSteps] or more. */
+    SINGLE_DAY_PEAK,
+    /** Week distance of [Challenge.targetKm]. */
+    DISTANCE,
+    /** Saturday plus Sunday only. */
+    WEEKEND_ONLY,
+    /** Most steps inside a sliding window of [Challenge.windowMinutes]. Needs hourly data. */
+    CONTINUOUS_RUN,
+}
+
+data class Challenge(
+    /** Stable id, e.g. "2026-11-21:HARD". */
+    val id: String,
+    /** The Saturday this challenge's week begins. */
+    val weekStart: LocalDate,
+    val tier: ChallengeTier,
+    val type: ChallengeType,
+    /** XP reward, already scaled by the goal. */
+    val xp: Int,
+    /** Mender Shards: Hard 1, Legendary 2. */
+    val shards: Int,
+    val rim: BadgeRim,
+    val targetSteps: Int = 0,
+    val targetDays: Int = 0,
+    val targetKm: Double = 0.0,
+    val windowMinutes: Int = 0,
+)
+
+/**
+ * Weekly challenge cards. The week runs Saturday to Friday. The same inputs always give the
+ * same three cards, so reopening the app never reshuffles them.
+ */
+object ChallengeGenerator {
+    /** A Saturday that anchors the 4-week Legendary cycle (the first Saturday of the imported history). */
+    val ANCHOR_SATURDAY: LocalDate = LocalDate.of(2025, 7, 5)
+    const val LOOKBACK_WEEKS = 8
+
+    /** A typical Medium week at the default goal; used to judge how the last 8 weeks went. */
+    private const val REFERENCE_WEEK_STEPS = 85_000.0
+    private const val MIN_FACTOR = 0.9
+    private const val MAX_FACTOR = 1.15
+    private const val KM_PER_STEP = 0.00075
+
+    /** The Saturday on or before [date]. */
+    fun weekStartFor(date: LocalDate): LocalDate {
+        val back = (date.dayOfWeek.value + 1) % 7 // Sat 0, Sun 1, Mon 2 ... Fri 6
+        return date.minusDays(back.toLong())
+    }
+
+    fun weekEndFor(weekStart: LocalDate): LocalDate = weekStart.plusDays(6)
+
+    fun weekIndex(weekStart: LocalDate): Int =
+        Math.floorDiv(ChronoUnit.DAYS.between(ANCHOR_SATURDAY, weekStart), 7L).toInt()
+
+    /** Every 4th week the Hard card becomes Legendary. */
+    fun isLegendaryWeek(weekStart: LocalDate): Boolean = Math.floorMod(weekIndex(weekStart), 4) == 3
+
+    /** Weekly targets scale with the goal, clamped like XP (0.5x to 2x). */
+    fun goalScale(goal: Int): Double = XpEngine.goalMultiplier(goal)
+
+    /**
+     * How the last 8 full weeks went compared with a typical week at this goal,
+     * limited to 0.9x..1.15x so a bad or great streak never makes cards silly.
+     */
+    fun adaptationFactor(weekStart: LocalDate, days: List<LedgerDay>, goal: Int): Double {
+        val byDate = HashMap<LocalDate, LedgerDay>()
+        for (d in days) byDate[d.date] = d
+        var sum = 0L
+        var weeks = 0
+        for (k in 1..LOOKBACK_WEEKS) {
+            val start = weekStart.minusWeeks(k.toLong())
+            var weekSteps = 0L
+            var present = 0
+            for (i in 0 until 7) {
+                val d = byDate[start.plusDays(i.toLong())]
+                if (d != null) {
+                    weekSteps += d.steps
+                    present++
+                }
+            }
+            if (present == 7) {
+                sum += weekSteps
+                weeks++
+            }
+        }
+        if (weeks == 0) return 1.0
+        val average = sum.toDouble() / weeks
+        val reference = REFERENCE_WEEK_STEPS * goalScale(goal)
+        val factor = average / reference
+        return if (factor < MIN_FACTOR) MIN_FACTOR else if (factor > MAX_FACTOR) MAX_FACTOR else factor
+    }
+
+    /** The three sealed cards for the week containing [weekStart]: Easy, Medium and Hard (or Legendary). */
+    fun offersFor(
+        weekStart: LocalDate,
+        days: List<LedgerDay>,
+        goal: Int,
+        hourlyAvailable: Boolean = false,
+    ): List<Challenge> {
+        val week = weekStartFor(weekStart)
+        val index = weekIndex(week)
+        val factor = adaptationFactor(week, days, goal)
+        val top = if (isLegendaryWeek(week)) ChallengeTier.LEGENDARY else ChallengeTier.HARD
+        val tiers = listOf(ChallengeTier.EASY, ChallengeTier.MEDIUM, top)
+        return tiers.map { tier ->
+            val type = pickType(tier, index, hourlyAvailable)
+            build(week, tier, type, goal, factor)
+        }
+    }
+
+    private fun variants(tier: ChallengeTier): List<ChallengeType> = when (tier) {
+        ChallengeTier.EASY -> listOf(
+            ChallengeType.WEEKLY_TOTAL, ChallengeType.DAYS_ABOVE,
+            ChallengeType.WEEKEND_ONLY, ChallengeType.CONTINUOUS_RUN,
+        )
+        ChallengeTier.MEDIUM -> listOf(
+            ChallengeType.WEEKLY_TOTAL, ChallengeType.DAYS_ABOVE,
+            ChallengeType.DISTANCE, ChallengeType.CONTINUOUS_RUN,
+        )
+        ChallengeTier.HARD -> listOf(
+            ChallengeType.WEEKLY_TOTAL, ChallengeType.DAYS_ABOVE,
+            ChallengeType.SINGLE_DAY_PEAK, ChallengeType.CONTINUOUS_RUN,
+        )
+        ChallengeTier.LEGENDARY -> listOf(
+            ChallengeType.WEEKLY_TOTAL, ChallengeType.SINGLE_DAY_PEAK,
+            ChallengeType.CONTINUOUS_RUN,
+        )
+    }
+
+    /**
+     * Rotates each card through its variants week by week. Hard and Legendary use their own
+     * counters (Legendary replaces every 4th Hard), so every variant keeps coming round.
+     */
+    private fun pickType(tier: ChallengeTier, index: Int, hourlyAvailable: Boolean): ChallengeType {
+        val list = variants(tier).filter { hourlyAvailable || it != ChallengeType.CONTINUOUS_RUN }
+        val key = when (tier) {
+            ChallengeTier.EASY -> index
+            ChallengeTier.MEDIUM -> index + 1
+            ChallengeTier.HARD -> (index - Math.floorDiv(index + 1, 4)) + 2
+            ChallengeTier.LEGENDARY -> Math.floorDiv(index, 4)
+        }
+        return list[Math.floorMod(key, list.size)]
+    }
+
+    private fun baseTotal(tier: ChallengeTier): Double = when (tier) {
+        ChallengeTier.EASY -> 75_000.0
+        ChallengeTier.MEDIUM -> 85_000.0
+        ChallengeTier.HARD -> 97_000.0
+        ChallengeTier.LEGENDARY -> 108_000.0
+    }
+
+    private fun roundToThousand(v: Double): Int = (Math.round(v / 1000.0) * 1000L).toInt()
+
+    private fun build(week: LocalDate, tier: ChallengeTier, type: ChallengeType, goal: Int, factor: Double): Challenge {
+        val sf = goalScale(goal) * factor
+        val id = week.toString() + ":" + tier.name
+        val xp = XpEngine.scaled(tier.baseXp, goal)
+        return when (type) {
+            ChallengeType.WEEKLY_TOTAL -> Challenge(
+                id, week, tier, type, xp, tier.shards, tier.rim,
+                targetSteps = roundToThousand(baseTotal(tier) * sf),
+            )
+            ChallengeType.DAYS_ABOVE -> {
+                val hard = tier == ChallengeTier.HARD || tier == ChallengeTier.LEGENDARY
+                val dayCount = when (tier) {
+                    ChallengeTier.EASY -> 4
+                    ChallengeTier.MEDIUM -> 5
+                    ChallengeTier.HARD -> 3
+                    ChallengeTier.LEGENDARY -> 4
+                }
+                val threshold = if (hard) roundToThousand(14_000.0 * sf) else goal
+                Challenge(id, week, tier, type, xp, tier.shards, tier.rim, targetSteps = threshold, targetDays = dayCount)
+            }
+            ChallengeType.SINGLE_DAY_PEAK -> {
+                val peak = if (tier == ChallengeTier.LEGENDARY) 27_000.0 else 22_000.0
+                Challenge(id, week, tier, type, xp, tier.shards, tier.rim, targetSteps = roundToThousand(peak * sf))
+            }
+            ChallengeType.WEEKEND_ONLY -> Challenge(
+                id, week, tier, type, xp, tier.shards, tier.rim,
+                targetSteps = roundToThousand(28_000.0 * sf),
+            )
+            ChallengeType.DISTANCE -> {
+                val steps = roundToThousand(baseTotal(tier) * sf)
+                val km = Math.round(steps * KM_PER_STEP).toDouble()
+                Challenge(id, week, tier, type, xp, tier.shards, tier.rim, targetKm = km)
+            }
+            ChallengeType.CONTINUOUS_RUN -> {
+                val steps = when (tier) {
+                    ChallengeTier.EASY -> 4_000
+                    ChallengeTier.MEDIUM -> 5_000
+                    ChallengeTier.HARD -> 10_000
+                    ChallengeTier.LEGENDARY -> 15_000
+                }
+                val minutes = when (tier) {
+                    ChallengeTier.EASY -> 60
+                    ChallengeTier.MEDIUM -> 60
+                    ChallengeTier.HARD -> 120
+                    ChallengeTier.LEGENDARY -> 180
+                }
+                Challenge(id, week, tier, type, xp, tier.shards, tier.rim, targetSteps = steps, windowMinutes = minutes)
+            }
+        }
+    }
+}
