@@ -1,5 +1,0 @@
-<resources>
-    <style name="Theme.Ashstride" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/ash_bg</item>
-    </style>
-</resources>
