@@ -14,7 +14,7 @@ object Seeder {
 
     suspend fun seedIfEmpty(context: Context, db: AshDatabase) = withContext(Dispatchers.IO) {
         db.inventoryDao().insertIfAbsent(Inventory())
-        if (db.dayDao().count() > 0) return@withContext
+        if (db.dayDao().newestDateBySource("IMPORTED") != null) return@withContext
 
         val text = context.assets.open("seed_steps.json").bufferedReader().use { it.readText() }
         val arr = JSONArray(text)

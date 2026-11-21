@@ -18,4 +18,6 @@ import androidx.room.RoomDatabase
 abstract class AshDatabase : RoomDatabase() {
     abstract fun dayDao(): DayDao
     abstract fun inventoryDao(): InventoryDao
+    abstract fun xpDao(): XpDao
+    abstract fun mendDao(): MendDao
 }

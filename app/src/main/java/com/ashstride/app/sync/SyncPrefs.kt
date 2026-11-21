@@ -24,6 +24,8 @@ class SyncPrefs(private val context: Context) {
     suspend fun lastSyncDate(): String? = context.syncStore.data.first()[lastSyncDateKey]
     suspend fun goal(): Int = context.syncStore.data.first()[goalKey] ?: DEFAULT_GOAL
 
+    val goalFlow: Flow<Int> = context.syncStore.data.map { it[goalKey] ?: DEFAULT_GOAL }
+
     val lastSyncEpochMs: Flow<Long?> = context.syncStore.data.map { it[lastSyncEpochKey] }
 
     suspend fun saveSync(token: String, date: String, epochMs: Long) {

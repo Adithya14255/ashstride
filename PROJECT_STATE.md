@@ -5,7 +5,9 @@ Paste SPEC.md and this file at the start of every new session.
 ## Done
 - **Session 1 (build 0.1.0):** Gradle project, version catalog, ash/ember Compose theme, Room schema (day_entry, xp_event, challenge_week, badge_unlock, inventory, mend_log), one-time seed of 505 days, placeholder streak counter on Home, fixed debug keystore, GitHub Actions workflow producing the APK.
 - **Session 2 (build 0.2.0):** pure-Kotlin rules engine in `com.ashstride.app.domain` plus JUnit tests. No UI or database changes; Home still uses the Session 1 `SimpleStreak` and looks identical.
-- **Session 3 (build 0.3.0, written; first CI compile errors fixed: nullable token, timeRangeSlicer; not yet installed):** Health Connect sync in `com.ashstride.app.sync`: aggregate-API daily steps + distance, manual entries subtracted, changes token, WorkManager every 30 min, permission flow + rationale screen, Health Connect card on Home. `SimpleStreak` still drives Home. CI unit tests are now a hard gate (continue-on-error removed). 16 new tests in `SyncPlannerTest` (expected total 88).
+- **Session 3 (build 0.3.0, written; compile errors fixed, CI green, verified on device):** Health Connect sync in `com.ashstride.app.sync`: aggregate-API daily steps + distance, manual entries subtracted, changes token, WorkManager every 30 min, permission flow + rationale screen, Health Connect card on Home. `SimpleStreak` still drives Home. CI unit tests are now a hard gate (continue-on-error removed). 16 new tests in `SyncPlannerTest` (expected total 88).
+
+- **Session 4 (build 0.4.0, written, not yet compiled):** navigation shell (Home, Streak, Stats, Badges bottom bar), `AppModel` wiring the ledger to `Progress.compute`, drawn flame / step ring / tier emblem, Streak calendar + mend flow, Stats, Badges list, goal selector. `SimpleStreak` removed. 7 new tests in `StatsEngineTest` (expected total 95).
 
 ## Verified
 - Session 1 build compiles in GitHub Actions and installs on the OnePlus 12. Home shows the seeded history.
@@ -61,9 +63,20 @@ Before granting access: same as 0.2.0 (streak 118, days 505, steps 6,406,335, 4,
 - Hourly data is not stored yet (needed for Continuous Run in Session 5; ChallengeGenerator gets `hourlyAvailable=false` until then).
 - Write-back to Health Connect not built (stays off).
 
-## Next: Session 4 (Home, Streak, Stats)
-Swap Home from `SimpleStreak` to `Progress.compute`; ring, flame, XP bar, tier emblem; Streak calendar; Stats screen. Navigation shell for all screens.
+## Session 4 notes (decisions not in SPEC.md)
+- Navigation is a plain state-based bottom bar (no navigation library). Profile and Settings screens are not tabs yet (Sessions 5/6).
+- Goal selector: tap the goal chip on any screen. Choices 5,000 / 7,500 / 10,000 / 12,500 / 15,000 / 20,000. Applies to today and future days only (`UPDATE day_entry SET goal ... WHERE date >= today`); stored in `SyncPrefs`.
+- Mend flow: tap a day on the Streak calendar. Preview ("Total streak 118 -> 251") shows for any mendable day; **Use Mender** is only enabled with at least 1 Mender, which cannot be earned until Session 5 (weekly challenges). So the confirm path cannot be tried on device yet. The transaction (`AppModel.mend`) re-checks all rules, marks the day, writes `mend_log`, updates inventory.
+- Home: ring, flame (animated sway), streak Total/Pure/Best, at-risk note, tier emblem + XP bar. Calendar marks: met = ember, mended = gold ring, missed = dark, today = light ring.
+- Stats: lifetime, day-of-week average (completed days only), last 12 months, records (best day/week/month, longest walk). Weeks are Saturday-Friday.
+- Badges: earned (newest first, Pure gold / Mended silver stitched / Lifetime bronze) and locked with progress. Rims are placeholder art. `badge_unlock` is not written yet (Session 6 notifications need it).
+- Seeder now checks for IMPORTED rows instead of any row, so a Health Connect row written first cannot block the seed.
+- Expected on first launch after install: Home shows level 82 Paragon (304 / 2,093 XP), streak 118 Solar flame with 3 layers, ring shows today's steps. Streak screen: pure 118, total 118, best 132. Badges: 11 earned.
+
+## Remaining plan
+- **Session 5:** Shrine + weekly challenges (store offers in `challenge_week.offersJson`, shard rewards, hourly data capture for Continuous Run); Journey + `story.json`; Profile; tier emblems, badge art, flame/level-up animations.
+- **Session 6:** notifications (at-risk, shrine-open, milestones, quiet hours), Glance widget, Settings, CSV/JSON export + import + backup, OxygenOS battery guide, polish and release.
 
 ## Open items
 - Tier art, emblem looks and badge art are still to come (Session 6).
-- Goal selector UI not built yet; goal is stored in `SyncPrefs` only.
+- Goal selector UI lands in Session 4; until then goal is stored in `SyncPrefs` only.

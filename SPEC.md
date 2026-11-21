@@ -67,4 +67,7 @@ At-risk alert, shrine-open (Saturday), milestone alerts, quiet hours. Home-scree
 10k default goal, selectable | one challenge per week | mend floor 25% of goal | write-back off by default | unlimited mend look-back | name Ashstride | flame changes every 5 days | pure pays more than mended | no real-world comparison or percentile ranking | story framing with weekend shrine.
 
 ## 12. Build plan
-1 skeleton + seed + CI (this build) | 2 rules engine + tests | 3 Health Connect | 4 Home, Streak, Stats | 5 Shrine + Mender flows | 6 badges, emblems, tier art, animations | 7 notifications, widget, settings, export | 8 polish + release.
+1 skeleton + seed + CI (done) | 2 rules engine + tests (done) | 3 Health Connect (done) |
+4 navigation shell, Home (ring, flame, XP bar, tier emblem), Streak calendar + Mend flow, Stats, Badges list, goal selector |
+5 Shrine + weekly challenges, Journey + story.json, Profile, emblem/tier/badge art, animations |
+6 notifications, widget, settings, export/import, OxygenOS battery guide, polish + release.

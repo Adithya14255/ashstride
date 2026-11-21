@@ -20,6 +20,16 @@ interface DayDao {
     @Query("SELECT * FROM day_entry WHERE date >= :from AND date <= :to")
     suspend fun getRange(from: String, to: String): List<DayEntry>
 
+    @Query("SELECT * FROM day_entry")
+    suspend fun getAll(): List<DayEntry>
+
+    @Query("UPDATE day_entry SET mended = 1, mendedAtEpochMs = :epochMs WHERE date = :date")
+    suspend fun markMended(date: String, epochMs: Long)
+
+    /** Goal changes apply from [fromDate] on; earlier rows keep the goal they had. */
+    @Query("UPDATE day_entry SET goal = :goal WHERE date >= :fromDate")
+    suspend fun updateGoalFrom(fromDate: String, goal: Int)
+
     /** Newest date held with the given source, or null. Used to find where imported history ends. */
     @Query("SELECT MAX(date) FROM day_entry WHERE source = :source")
     suspend fun newestDateBySource(source: String): String?
@@ -38,4 +48,22 @@ interface InventoryDao {
 
     @Query("SELECT * FROM inventory WHERE id = 1")
     fun observe(): Flow<Inventory?>
+
+    @Query("SELECT * FROM inventory WHERE id = 1")
+    suspend fun get(): Inventory?
+
+    @Query("UPDATE inventory SET shards = :shards, menders = :menders WHERE id = 1")
+    suspend fun set(shards: Int, menders: Int)
+}
+
+@Dao
+interface XpDao {
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM xp_event")
+    fun observeTotal(): Flow<Long>
+}
+
+@Dao
+interface MendDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(row: MendLog)
 }
