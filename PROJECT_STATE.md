@@ -8,14 +8,14 @@ Paste SPEC.md and this file at the start of every new session.
 
 ## Verified
 - Session 1 build compiles in GitHub Actions and installs on the OnePlus 12. Home shows the seeded history.
+- Session 2 build (`0.2.0`) compiles in GitHub Actions, installs on the OnePlus 12, and launches cleanly with the expected baseline on Home.
+- Session 2 unit test suite (`testDebugUnitTest`, Gradle 8.9, 2026-11-21): **72/72 tests passed** (`0` failures, `0` errors, `0` skipped) across `BadgeEvaluatorTest` (9), `ChallengeGeneratorTest` (24), `FlameEngineTest` (6), `StreakEngineTest` (15), and `XpLevelTest` (18).
 - CI fixes already applied: removed android-actions/setup-android (replaced by an sdkmanager licenses step),
   workflow uses checkout@v5 and setup-java@v5, gradle/libs.versions.toml added by hand.
 - Repo: github.com/Adithya14255/ashstride (public).
 
-## NOT yet verified (check first in Session 3)
-- Session 2 was written without a Kotlin compiler available, so it has **not** been compiled or run. Every expected number in the tests was cross-checked against an independent Python re-implementation of the same rules over `seed_steps.json`.
-- First thing to confirm: the "Build APK" run is green. If it fails, paste the Gradle error; the fix will be small.
-- Then open the run's **unit-test-report** artifact (or the "Run unit tests" step) and confirm all tests pass. The test step has `continue-on-error: true` so a failing test never blocks the APK. When tests are green, delete that line in `.github/workflows/build-apk.yml` to make them a hard gate.
+## Remaining CI cleanup from Session 2
+- Remove `continue-on-error: true` from the `Run unit tests` step in `.github/workflows/build-apk.yml` so unit test failures act as a hard gate.
 
 ## Expected on first install (0.2.0)
 Identical to 0.1.0: streak **118**, days loaded **505**, total steps **6,406,335**, total distance **4,932 km**, goal chip **Goal 10,000**. (The new engine is not wired into the UI until Session 4.)
@@ -54,5 +54,4 @@ Identical to 0.1.0: streak **118**, days loaded **505**, total steps **6,406,335
 Read steps + distance via aggregate API, exclude manual entries, WorkManager sync with change tokens, history permission (older than 30 days) and rationale screen, write rows into `day_entry` with source HEALTH_CONNECT. Keep `SimpleStreak` until Session 4 swaps Home to `Progress.compute`.
 
 ## Open items
-- Confirm the Session 2 build and tests are green in Actions (see above).
 - Tier art, emblem looks and badge art are still to come (Session 6).
