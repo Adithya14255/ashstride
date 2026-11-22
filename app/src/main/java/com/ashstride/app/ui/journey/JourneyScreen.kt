@@ -143,7 +143,7 @@ private fun WaypointRow(w: Waypoint, state: WpState, first: Boolean, last: Boole
                 WpState.FAR -> Cinder
             }
             drawCircle(fill, radius = 7.dp.toPx(), center = Offset(x, 14.dp.toPx()))
-            if (state == WpState.REACHED) drawCircle(Color(0xFF211D1A), radius = 2.5.dp.toPx(), center = Offset(x, 14.dp.toPx()))
+            if (state == WpState.REACHED) drawCircle(Color(0xFF0A0C13), radius = 2.5.dp.toPx(), center = Offset(x, 14.dp.toPx()))
         }
         Column(Modifier.weight(1f).padding(bottom = 14.dp)) {
             Text(
@@ -174,8 +174,8 @@ private fun HereRow(j: JourneyPosition) {
         }
         Row(Modifier.padding(vertical = 10.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Canvas(Modifier.width(20.dp).height(26.dp)) {
-                drawPath(FlameShapes.path(FlameShapes.OUTER, 0f, 0f, size.width, size.height), Ember)
-                drawPath(FlameShapes.path(FlameShapes.MID, 0f, 0f, size.width, size.height), Gold)
+                drawPath(FlameShapes.silhouetteIn(0f, 0f, size.width, size.height), Ember)
+                drawPath(FlameShapes.silhouetteIn(size.width * 0.18f, size.height * 0.14f, size.width * 0.64f, size.height * 0.72f), Gold)
             }
             Spacer(Modifier.width(10.dp))
             Text(

@@ -20,7 +20,7 @@
         android:id="@+id/widget_steps"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FBF4EC"
+        android:textColor="#F6F0E2"
         android:textSize="20sp"
         android:textStyle="bold" />
 
@@ -28,6 +28,6 @@
         android:id="@+id/widget_sub"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#D1C5B9"
+        android:textColor="#DDD2B8"
         android:textSize="12sp" />
 </LinearLayout>

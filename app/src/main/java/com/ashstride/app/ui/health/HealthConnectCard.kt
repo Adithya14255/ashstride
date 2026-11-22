@@ -57,7 +57,7 @@ fun HealthConnectCard(app: AshstrideApp) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surface, com.ashstride.app.ui.theme.ChamferShape(16.dp))
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {

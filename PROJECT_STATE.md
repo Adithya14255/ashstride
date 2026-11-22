@@ -108,6 +108,14 @@ Changes (UNVERIFIED until the first CI run: this session was written without a c
 
 Known quirks carried over: picking a card late in the week can lock in progress already made (a Weekend card picked on Monday).
 
+## Session 7 (design pass 1: flame and card only; UNVERIFIED, written without a compiler)
+- **Flame is now ten crystal tiers** from the concept art (`FlameShapes` = five traced shards with facets, `CrystalFlame.kt` = drawing, `FlameView.kt` = palettes and names). Domain untouched (`FlameEngine`, 128 tests unchanged). UI mapping in `flameStyle()`: tier = stage / 2, so a new tier every 10 days (X from day 90), inside a tier a visible step every 5 days (`heat`) and daily growth. Tiers: I Dull Spark, II Kindled Ember, III Ignited Flame, IV White Heat, V Cobalt Blaze, VI Wildfire, VII Shadowfire, VIII Dragonfire, IX Celestial Flame, X Eternal Singularity. From 100 days: extra orbit rings and rays (old Solar layers); from 200: hue cycle. "Solar flame" name retired.
+- Animations: shards drift/tilt out of step, facet shimmer, sweeping glint, pulsing glow, rising embers, per-tier ornaments (wisps, lightning, thorn ring, smoke, crystals, claws, wings, halo, crown, orbit rings).
+- **Card** redone after the concept sheet: `drawCardFace` (gilded chamfered frame, name plate, rank ribbon with stars = gems+1, arched window with live flame, flame plate, flavour, worn title) and `drawStatPanel` (banner + Streak / Road / Steps / Trials / EXP rows, showcase medallions, footer). Profile shows card then panel. Export PNG is a 2048x1152 sheet with both side by side.
+- Small icons (nav, badges, avatar, journey, mender slot, launcher, status) use the crystal silhouette.
+- Design tokens live in `ui/theme/Gilt.kt`.
+- **Whole-app theme (same session, second request):** old colour names in `Color.kt` now point at the gilded night palette (page/cards/text), Material primary is gold, `Panel`, header chips, `SectionTitle`, `SoftBar`, Shrine cards and the Health Connect card use `ChamferShape` + `giltBorder`, screens get a gold divider under the title (`GiltDivider`), nav bar has a gold top line and gold selection, widget, launcher background and window background match. Ember stays as the progress/met accent. Not done: dialogs and buttons keep Material's rounded shapes.
+
 ## Remaining plan
 - Fix any first-build compile errors from Session 6. Then real-world polish from using it for a week (card layout on your screen, widget size, alert timing).
 

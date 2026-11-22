@@ -66,7 +66,7 @@ fun CelebrationOverlay(c: Celebration, onDone: () -> Unit) {
         onDismissRequest = onDone,
         properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
     ) {
-        Box(Modifier.fillMaxSize().background(Color(0xF0120E0B)), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(Color(0xF2070810)), contentAlignment = Alignment.Center) {
             Canvas(Modifier.fillMaxSize()) {
                 val centre = Offset(size.width / 2f, size.height * 0.40f)
                 val reach = size.minDimension * 0.55f
@@ -144,7 +144,7 @@ fun CelebrationOverlay(c: Celebration, onDone: () -> Unit) {
                 Spacer(Modifier.height(28.dp))
                 Button(
                     onClick = onDone,
-                    colors = ButtonDefaults.buttonColors(containerColor = accent, contentColor = Color(0xFF211D1A)),
+                    colors = ButtonDefaults.buttonColors(containerColor = accent, contentColor = Color(0xFF0A0C13)),
                 ) { Text("Continue") }
             }
         }

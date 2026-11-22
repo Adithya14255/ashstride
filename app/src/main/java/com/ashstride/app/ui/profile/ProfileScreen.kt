@@ -89,9 +89,9 @@ fun AvatarView(name: String, ring: Color, auraRank: Int, modifier: Modifier = Mo
                 drawCircle(ring.copy(alpha = 0.32f - 0.08f * i), radius = r + i * 2.5.dp.toPx(), center = c, style = Stroke(1.5.dp.toPx()))
             }
             drawCircle(Brush.linearGradient(listOf(c1, c2), Offset(0f, 0f), Offset(size.width, size.height)), radius = r, center = c)
-            val fh = r * 1.25f
+            val fh = r * 1.45f
             val fw = fh * FlameShapes.ASPECT
-            drawPath(FlameShapes.path(FlameShapes.OUTER, c.x - fw / 2f, c.y - fh * 0.45f, fw, fh), Color.White.copy(alpha = 0.10f))
+            drawPath(FlameShapes.silhouette(c.x - fw / 2f, c.y - fh * 0.5f, fw, fh), Color.White.copy(alpha = 0.10f))
             drawCircle(ring, radius = r, center = c, style = Stroke(3.dp.toPx()))
         }
         Text(
@@ -172,6 +172,7 @@ fun ProfileScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick:
                 daysWalked = ledger.size,
             )
             AshCardView(cardData)
+            AshStatPanelView(cardData)
             Button(
                 onClick = {
                     scope.launch {
@@ -180,7 +181,7 @@ fun ProfileScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick:
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("Save card as image") }
+            ) { Text("Save card and stats as image") }
 
             Panel(tint = tc) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

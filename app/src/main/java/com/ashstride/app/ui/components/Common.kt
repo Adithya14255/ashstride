@@ -1,6 +1,7 @@
 package com.ashstride.app.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,33 +25,47 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ashstride.app.ui.Fmt
 import com.ashstride.app.ui.theme.AshHigh
 import com.ashstride.app.ui.theme.AshRaised
 import com.ashstride.app.ui.theme.Ember
-import com.ashstride.app.ui.theme.Hairline
+import com.ashstride.app.ui.theme.ChamferShape
+import com.ashstride.app.ui.theme.Gilt
+import com.ashstride.app.ui.theme.giltBorder
 
 /** Title row used on every screen. The goal is always visible and tappable. */
 @Composable
 fun ScreenHeader(title: String, goal: Int, onGoalClick: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, style = MaterialTheme.typography.headlineMedium.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Serif))
+        Text(
+            title,
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                letterSpacing = 0.5.sp,
+            ),
+            color = Gilt.Cream,
+        )
         Text(
             "Goal ${Fmt.n(goal)}",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.secondary,
             modifier = Modifier
-                .clip(RoundedCornerShape(50))
+                .clip(ChamferShape(10.dp))
                 .clickable(onClick = onGoalClick)
-                .background(MaterialTheme.colorScheme.surface)
-                .border(1.dp, Hairline, RoundedCornerShape(50))
+                .background(Gilt.NightLift)
+                .giltBorder(ChamferShape(10.dp), 1.dp)
                 .padding(horizontal = 14.dp, vertical = 8.dp),
         )
+    }
+    GiltDivider()
     }
 }
 
@@ -63,10 +78,10 @@ fun BackHeader(title: String, goal: Int, onGoalClick: () -> Unit, onBack: () -> 
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.secondary,
             modifier = Modifier
-                .clip(RoundedCornerShape(50))
+                .clip(ChamferShape(10.dp))
                 .clickable(onClick = onBack)
-                .background(MaterialTheme.colorScheme.surface)
-                .border(1.dp, Hairline, RoundedCornerShape(50))
+                .background(Gilt.NightLift)
+                .giltBorder(ChamferShape(10.dp), 1.dp)
                 .padding(horizontal = 14.dp, vertical = 8.dp),
         )
         ScreenHeader(title, goal, onGoalClick)
@@ -76,13 +91,13 @@ fun BackHeader(title: String, goal: Int, onGoalClick: () -> Unit, onBack: () -> 
 /** A raised card. [tint] washes a little colour over the top, used for the flame hero and the shrine. */
 @Composable
 fun Panel(modifier: Modifier = Modifier, tint: Color? = null, content: @Composable ColumnScope.() -> Unit) {
-    val top = if (tint == null) Color(0xFF453B33) else androidx.compose.ui.graphics.lerp(Color(0xFF453B33), tint, 0.18f)
+    val top = if (tint == null) Gilt.NightLift else androidx.compose.ui.graphics.lerp(Gilt.NightLift, tint, 0.16f)
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(ChamferShape(18.dp))
             .background(Brush.verticalGradient(listOf(top, AshRaised)))
-            .border(1.dp, Hairline, RoundedCornerShape(24.dp))
+            .giltBorder(ChamferShape(18.dp), 1.5.dp, 0.8f)
             .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         content = content,
@@ -93,7 +108,8 @@ fun Panel(modifier: Modifier = Modifier, tint: Color? = null, content: @Composab
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     Text(
         text,
-        style = MaterialTheme.typography.titleMedium.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Serif),
+        style = MaterialTheme.typography.titleMedium.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, letterSpacing = 0.4.sp),
+        color = Gilt.Cream,
         modifier = modifier,
     )
 }
@@ -120,6 +136,26 @@ fun Pill(text: String, color: Color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }
 
+/** A hairline of gold with a diamond in the middle, under screen titles. */
+@Composable
+fun GiltDivider(modifier: Modifier = Modifier) {
+    Canvas(modifier.fillMaxWidth().height(10.dp)) {
+        val y = size.height / 2f
+        val mid = size.width / 2f
+        val gap = 14.dp.toPx()
+        drawLine(Gilt.Line.copy(alpha = 0.8f), androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(mid - gap, y), strokeWidth = 1.5.dp.toPx())
+        drawLine(Gilt.Line.copy(alpha = 0.8f), androidx.compose.ui.geometry.Offset(mid + gap, y), androidx.compose.ui.geometry.Offset(size.width, y), strokeWidth = 1.5.dp.toPx())
+        val r = 4.dp.toPx()
+        val p = Path()
+        p.moveTo(mid, y - r * 1.25f)
+        p.lineTo(mid + r, y)
+        p.lineTo(mid, y + r * 1.25f)
+        p.lineTo(mid - r, y)
+        p.close()
+        drawPath(p, Gilt.GoldMid)
+    }
+}
+
 /** Rounded progress bar with no Material dependencies, so it looks the same everywhere. */
 @Composable
 fun SoftBar(fraction: Float, modifier: Modifier = Modifier, color: Color = Ember, height: Int = 8) {
@@ -129,7 +165,8 @@ fun SoftBar(fraction: Float, modifier: Modifier = Modifier, color: Color = Ember
             .fillMaxWidth()
             .height(height.dp)
             .clip(RoundedCornerShape(50))
-            .background(AshHigh),
+            .background(AshHigh)
+            .border(1.dp, Gilt.Line.copy(alpha = 0.5f), RoundedCornerShape(50)),
     ) {
         if (f > 0f) {
             Box(

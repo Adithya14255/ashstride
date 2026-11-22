@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,22 +68,27 @@ fun AppRoot(app: AshstrideApp) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF42332A), Color(0xFF2E2823), Color(0xFF241F1B)))),
+            .background(Brush.verticalGradient(listOf(Color(0xFF161A29), Color(0xFF0C0F18), Color(0xFF08090E)))),
     ) {
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
-                NavigationBar(containerColor = AshDeep) {
+                NavigationBar(
+                    containerColor = AshDeep,
+                    modifier = Modifier.drawBehind {
+                        drawLine(com.ashstride.app.ui.theme.Gilt.GoldMid.copy(alpha = 0.7f), androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(size.width, 0f), strokeWidth = 1.5.dp.toPx())
+                    },
+                ) {
                     Tab.values().forEach { t ->
                         val selected = tab == t
                         NavigationBarItem(
                             selected = selected,
                             onClick = { go(t) },
-                            icon = { NavIcon(t.glyph, if (selected) Ember else Smoke, filled = selected) },
+                            icon = { NavIcon(t.glyph, if (selected) com.ashstride.app.ui.theme.Gilt.GoldBright else Smoke, filled = selected) },
                             label = { Text(t.label) },
                             colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = MaterialTheme.colorScheme.surfaceVariant,
-                                selectedTextColor = EmberLight,
+                                indicatorColor = com.ashstride.app.ui.theme.Gilt.NightLift,
+                                selectedTextColor = com.ashstride.app.ui.theme.Gilt.GoldBright,
                                 unselectedTextColor = Smoke,
                             ),
                         )

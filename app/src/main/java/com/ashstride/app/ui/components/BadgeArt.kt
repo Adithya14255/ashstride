@@ -91,7 +91,7 @@ fun BadgeArt(
             val rimStroke: Brush = if (locked) SolidColor(Cinder) else rimBrush(rim, c)
 
             drawCircle(
-                brush = Brush.radialGradient(listOf(Color(0xFF4A413A), AshHigh), c, r),
+                brush = Brush.radialGradient(listOf(Color(0xFF2B3042), AshHigh), c, r),
                 radius = r, center = c,
             )
             drawCircle(brush = rimStroke, radius = r, center = c, style = Stroke(width = (sz * 0.07f).dp.toPx()))
@@ -104,10 +104,10 @@ fun BadgeArt(
 
             when (kind) {
                 BadgeKind.STREAK -> {
-                    val fh = r * 0.86f
+                    val fh = r * 1.05f
                     val fw = fh * FlameShapes.ASPECT
                     drawPath(
-                        FlameShapes.path(FlameShapes.OUTER, c.x - fw / 2f, c.y - r * 0.78f, fw, fh),
+                        FlameShapes.silhouette(c.x - fw / 2f, c.y - r * 0.60f - fh * 0.20f, fw, fh),
                         art.copy(alpha = if (locked) 0.5f else 0.95f),
                     )
                 }

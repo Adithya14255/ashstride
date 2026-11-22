@@ -31,6 +31,7 @@ XP and rewards scale by goal / 10,000, clamped 0.5x to 2x. Weekly challenge targ
 
 ## 5. Streak and flame
 - Two counters: **Pure** (natural days only) and **Total** (including mends). A day counts if steps >= that day's goal, or it is mended.
+- Flame is ten crystal tiers (see PROJECT_STATE Session 7): tier = stage / 2, a step every 5 days inside a tier.
 - Flame stage = Total streak / 5. New look every 5 days, plus slight daily growth so something changes every day.
 - Stages: 0-4 ash-grey smolder; 5-9 red; 10-14 deep orange; 15-19 orange; 20-24 amber; 25-29 gold; 30-34 yellow; 35-39 white-hot; 40-44 pale blue; 45-49 electric blue; 50-54 cyan; 55-59 teal; 60-64 emerald; 65-69 lime; 70-74 violet; 75-79 purple; 80-84 magenta; 85-89 rose; 90-94 crimson-gold; 95-99 golden-white; **100+ Solar** (sparks, +1 ring or layer every 5 days); 200+ prismatic cycle.
 - A run containing a mend shows a thin gold-thread seam on the flame.

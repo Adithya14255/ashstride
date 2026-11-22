@@ -162,7 +162,7 @@ fun TierEmblem(level: LevelInfo, modifier: Modifier = Modifier, emblemSize: Dp =
                 radius = r * 1.7f, center = Offset(cx, cy),
             )
             val body = tierShape(level.tier, cx, cy, r)
-            drawPath(body, Brush.verticalGradient(listOf(Color(0xFF4A413A), Ash), startY = cy - r, endY = cy + r))
+            drawPath(body, Brush.verticalGradient(listOf(Color(0xFF2B3042), Ash), startY = cy - r, endY = cy + r))
             drawPath(body, color, style = Stroke(width = (sz * 0.05f).dp.toPx(), join = StrokeJoin.Round))
             drawPath(
                 tierShape(level.tier, cx, cy, r * 0.78f), color.copy(alpha = 0.35f),

@@ -27,7 +27,7 @@ fun NavIcon(glyph: NavGlyph, color: Color, filled: Boolean, modifier: Modifier =
         fun pt(x: Float, y: Float) = Offset(x * s, y * s)
         when (glyph) {
             NavGlyph.HOME -> {
-                val path = FlameShapes.path(FlameShapes.OUTER, 3f * s, 1.5f * s, 20f * s, 23f * s)
+                val path = FlameShapes.silhouetteIn(3f * s, 1.5f * s, 20f * s, 23f * s)
                 drawPath(path, color, style = if (filled) Fill else stroke)
             }
             NavGlyph.STREAK -> {
@@ -38,7 +38,7 @@ fun NavIcon(glyph: NavGlyph, color: Color, filled: Boolean, modifier: Modifier =
                     cornerRadius = CornerRadius(4f * s),
                     style = if (filled) Fill else stroke,
                 )
-                val mark = if (filled) Color(0xFF211D1A) else color
+                val mark = if (filled) Color(0xFF0A0C13) else color
                 drawLine(mark, pt(3f, 11f), pt(23f, 11f), strokeWidth = 2f * s)
                 drawLine(color, pt(8f, 2.5f), pt(8f, 7f), strokeWidth = 2f * s, cap = StrokeCap.Round)
                 drawLine(color, pt(18f, 2.5f), pt(18f, 7f), strokeWidth = 2f * s, cap = StrokeCap.Round)

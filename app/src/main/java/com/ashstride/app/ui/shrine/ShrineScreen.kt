@@ -221,7 +221,7 @@ private const val ShrineStateNone = "NONE"
 @Composable
 private fun ChallengeCard(c: Challenge, mode: CardMode, progress: ChallengeProgress?, odds: String?, onClick: (() -> Unit)?) {
     val rim = rimColor(c.rim)
-    val shape = RoundedCornerShape(22.dp)
+    val shape = com.ashstride.app.ui.theme.ChamferShape(16.dp)
     val dim = mode == CardMode.DIM
     val borderBrush: Brush = if (dim) Brush.linearGradient(listOf(Cinder, Cinder)) else if (c.rim == com.ashstride.app.domain.BadgeRim.PRISMATIC) {
         Brush.linearGradient(listOf(Color(0xFFFF5252), Color(0xFFFFD740), Color(0xFF69F0AE), Color(0xFF40C4FF), Color(0xFFE040FB)))
@@ -231,7 +231,7 @@ private fun ChallengeCard(c: Challenge, mode: CardMode, progress: ChallengeProgr
     var mod = Modifier
         .fillMaxWidth()
         .clip(shape)
-        .background(Brush.verticalGradient(listOf(Color(0xFF453B33), Color(0xFF3B332D))), shape)
+        .background(Brush.verticalGradient(listOf(Color(0xFF1C2132), Color(0xFF141824))), shape)
         .border(if (dim) 1.dp else 2.dp, borderBrush, shape)
     if (onClick != null) mod = mod.clickable(onClick = onClick)
     Column(mod.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -297,8 +297,8 @@ private fun ToriiArt(modifier: Modifier) {
         val cx = w / 2f
         val pillarGap = minOf(w * 0.30f, 130.dp.toPx())
         val top = h * 0.14f
-        val col = Color(0xFF6B2E1A)
-        val glow = Color(0xFFE8581C)
+        val col = Color(0xFF3A3250)
+        val glow = Color(0xFFD1AE5C)
         drawCircle(
             brush = Brush.radialGradient(listOf(glow.copy(alpha = 0.22f), Color.Transparent), Offset(cx, h * 0.6f), h * 0.9f),
             radius = h * 0.9f, center = Offset(cx, h * 0.6f),
@@ -333,7 +333,7 @@ private fun ShardSlot(filled: Boolean) {
 @Composable
 private fun MenderSlot(filled: Boolean) {
     Canvas(Modifier.size(width = 24.dp, height = 31.dp)) {
-        val p = FlameShapes.path(FlameShapes.OUTER, 1.dp.toPx(), 1.dp.toPx(), size.width - 2.dp.toPx(), size.height - 2.dp.toPx())
+        val p = FlameShapes.silhouetteIn(1.dp.toPx(), 1.dp.toPx(), size.width - 2.dp.toPx(), size.height - 2.dp.toPx())
         if (filled) drawPath(p, Gold) else drawPath(p, Cinder, style = Stroke(width = 1.5.dp.toPx()))
     }
 }

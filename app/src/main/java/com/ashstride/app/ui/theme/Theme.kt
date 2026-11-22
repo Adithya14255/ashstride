@@ -6,8 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val AshColors = darkColorScheme(
-    primary = Ember,
-    onPrimary = AshDeep,
+    primary = Gold,
+    onPrimary = Ash,
     secondary = Gold,
     onSecondary = AshDeep,
     background = Ash,
@@ -23,7 +23,7 @@ private val AshColors = darkColorScheme(
     surfaceContainerLow = Ash,
     surfaceContainer = AshRaised,
     surfaceContainerHigh = AshHigh,
-    surfaceContainerHighest = Color(0xFF584D44),
+    surfaceContainerHighest = Color(0xFF2E3548),
 )
 
 @Composable
