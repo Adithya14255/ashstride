@@ -40,6 +40,7 @@ import com.ashstride.app.ui.theme.Ember
 import com.ashstride.app.ui.theme.EmberLight
 import com.ashstride.app.ui.theme.Smoke
 import kotlinx.coroutines.launch
+import androidx.compose.ui.unit.dp
 
 enum class Tab(val label: String, val glyph: NavGlyph) {
     HOME("Home", NavGlyph.HOME),
