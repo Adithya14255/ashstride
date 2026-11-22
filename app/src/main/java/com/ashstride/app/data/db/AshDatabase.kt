@@ -25,6 +25,7 @@ abstract class AshDatabase : RoomDatabase() {
     abstract fun mendDao(): MendDao
     abstract fun challengeDao(): ChallengeDao
     abstract fun bucketDao(): BucketDao
+    abstract fun badgeDao(): BadgeDao
 
     companion object {
         /** Session 5: adds the 15-minute step buckets. Nothing existing is touched, so history and streaks survive. */

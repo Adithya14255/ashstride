@@ -30,10 +30,13 @@ import com.ashstride.app.ui.components.NavIcon
 import com.ashstride.app.ui.home.HomeScreen
 import com.ashstride.app.ui.journey.JourneyScreen
 import com.ashstride.app.ui.profile.ProfileScreen
+import com.ashstride.app.ui.settings.SettingsScreen
 import com.ashstride.app.ui.shrine.ShrineScreen
 import com.ashstride.app.ui.stats.StatsScreen
 import com.ashstride.app.ui.streak.StreakScreen
+import com.ashstride.app.ui.theme.AshDeep
 import com.ashstride.app.ui.theme.Ember
+import com.ashstride.app.ui.theme.EmberLight
 import com.ashstride.app.ui.theme.Smoke
 import kotlinx.coroutines.launch
 
@@ -46,7 +49,7 @@ enum class Tab(val label: String, val glyph: NavGlyph) {
 }
 
 /** Pages opened from Profile. NONE means the tab itself is showing. */
-enum class SubScreen { NONE, STATS, BADGES }
+enum class SubScreen { NONE, STATS, BADGES, SETTINGS }
 
 @Composable
 fun AppRoot(app: AshstrideApp) {
@@ -64,12 +67,12 @@ fun AppRoot(app: AshstrideApp) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF2B201A), Color(0xFF211D1A), Color(0xFF171310)))),
+            .background(Brush.verticalGradient(listOf(Color(0xFF42332A), Color(0xFF2E2823), Color(0xFF241F1B)))),
     ) {
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
-                NavigationBar(containerColor = Color(0xFF1B1613)) {
+                NavigationBar(containerColor = AshDeep) {
                     Tab.values().forEach { t ->
                         val selected = tab == t
                         NavigationBarItem(
@@ -79,7 +82,7 @@ fun AppRoot(app: AshstrideApp) {
                             label = { Text(t.label) },
                             colors = NavigationBarItemDefaults.colors(
                                 indicatorColor = MaterialTheme.colorScheme.surfaceVariant,
-                                selectedTextColor = Ember,
+                                selectedTextColor = EmberLight,
                                 unselectedTextColor = Smoke,
                             ),
                         )
@@ -90,6 +93,7 @@ fun AppRoot(app: AshstrideApp) {
             when (sub) {
                 SubScreen.STATS -> StatsScreen(app, inner, openGoal) { sub = SubScreen.NONE }
                 SubScreen.BADGES -> BadgesScreen(app, inner, openGoal) { sub = SubScreen.NONE }
+                SubScreen.SETTINGS -> SettingsScreen(app, inner, openGoal) { sub = SubScreen.NONE }
                 SubScreen.NONE -> when (tab) {
                     Tab.HOME -> HomeScreen(app, inner, openGoal, go)
                     Tab.STREAK -> StreakScreen(app, inner, openGoal)

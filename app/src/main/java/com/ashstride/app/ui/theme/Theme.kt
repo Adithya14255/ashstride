@@ -3,12 +3,13 @@ package com.ashstride.app.ui.theme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 
 private val AshColors = darkColorScheme(
     primary = Ember,
-    onPrimary = Ash,
+    onPrimary = AshDeep,
     secondary = Gold,
-    onSecondary = Ash,
+    onSecondary = AshDeep,
     background = Ash,
     onBackground = Parchment,
     surface = AshRaised,
@@ -16,6 +17,13 @@ private val AshColors = darkColorScheme(
     surfaceVariant = AshHigh,
     onSurfaceVariant = Smoke,
     outline = Cinder,
+    outlineVariant = Cinder,
+    // Dialogs and menus use the surfaceContainer roles; without these they fall back to a purple-grey default.
+    surfaceContainerLowest = AshDeep,
+    surfaceContainerLow = Ash,
+    surfaceContainer = AshRaised,
+    surfaceContainerHigh = AshHigh,
+    surfaceContainerHighest = Color(0xFF584D44),
 )
 
 @Composable

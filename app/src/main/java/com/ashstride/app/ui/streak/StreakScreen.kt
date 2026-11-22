@@ -48,6 +48,7 @@ import com.ashstride.app.ui.components.StatRow
 import com.ashstride.app.ui.theme.AshHigh
 import com.ashstride.app.ui.theme.AshRaised
 import com.ashstride.app.ui.theme.Cinder
+import com.ashstride.app.ui.theme.Dim
 import com.ashstride.app.ui.theme.Ember
 import com.ashstride.app.ui.theme.Gold
 import com.ashstride.app.ui.theme.Parchment
@@ -169,7 +170,7 @@ private fun DayCell(date: LocalDate, day: LedgerDay?, today: LocalDate, onClick:
     val fg: Color
     var ring: Color? = null
     when {
-        day == null || future -> { bg = Color.Transparent; fg = Cinder }
+        day == null || future -> { bg = Color.Transparent; fg = Dim }
         day.met -> { bg = Ember; fg = MaterialTheme.colorScheme.onPrimary }
         day.mended -> { bg = AshHigh; fg = Gold; ring = Gold }
         else -> { bg = AshRaised; fg = MaterialTheme.colorScheme.onSurfaceVariant }

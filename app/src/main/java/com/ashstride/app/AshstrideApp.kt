@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.room.Room
 import com.ashstride.app.data.db.AshDatabase
 import com.ashstride.app.sync.HealthSync
+import com.ashstride.app.notify.NotificationEngine
+import com.ashstride.app.notify.ReminderScheduler
 import com.ashstride.app.sync.SyncScheduler
 import com.ashstride.app.ui.AppModel
 
@@ -19,5 +21,7 @@ class AshstrideApp : Application() {
     override fun onCreate() {
         super.onCreate()
         SyncScheduler.schedule(this)
+        NotificationEngine.ensureChannels(this)
+        ReminderScheduler.schedule(this)
     }
 }

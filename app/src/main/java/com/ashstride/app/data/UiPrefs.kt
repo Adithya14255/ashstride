@@ -30,6 +30,7 @@ class UiPrefs(private val context: Context) {
     private val seenStageKey = intPreferencesKey("seen_stage")
     private val seenWaypointsKey = intPreferencesKey("seen_waypoints")
     private val seenResolvedKey = longPreferencesKey("seen_resolved_at")
+    private val offersVersionKey = intPreferencesKey("offers_version")
 
     val nameFlow: Flow<String> = context.uiStore.data.map { it[nameKey] ?: DEFAULT_NAME }
     val titleFlow: Flow<String?> = context.uiStore.data.map { it[titleKey] }
@@ -47,6 +48,9 @@ class UiPrefs(private val context: Context) {
     suspend fun setShowcase(keys: List<String>) {
         context.uiStore.edit { it[showcaseKey] = keys.take(SHOWCASE_SIZE).joinToString(",") }
     }
+
+    suspend fun offersVersion(): Int = context.uiStore.data.first()[offersVersionKey] ?: 1
+    suspend fun setOffersVersion(v: Int) { context.uiStore.edit { it[offersVersionKey] = v } }
 
     suspend fun seen(): SeenMarks {
         val p = context.uiStore.data.first()

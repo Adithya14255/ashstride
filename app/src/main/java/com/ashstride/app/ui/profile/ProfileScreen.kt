@@ -61,9 +61,11 @@ import com.ashstride.app.ui.components.ScreenHeader
 import com.ashstride.app.ui.components.SectionTitle
 import com.ashstride.app.ui.components.StatRow
 import com.ashstride.app.ui.components.TierEmblem
+import com.ashstride.app.ui.components.flameName
 import com.ashstride.app.ui.components.tierColor
 import com.ashstride.app.ui.theme.AshHigh
 import com.ashstride.app.ui.theme.Cinder
+import com.ashstride.app.ui.theme.Dim
 import com.ashstride.app.ui.theme.Gold
 import com.ashstride.app.ui.theme.Smoke
 import kotlinx.coroutines.Dispatchers
@@ -115,6 +117,7 @@ fun ProfileScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick:
     val equipped by model.equippedBadge.collectAsStateWithLifecycle()
     val showcase by model.showcase.collectAsStateWithLifecycle()
     val badges by model.badgeEntries.collectAsStateWithLifecycle()
+    val ledger by model.ledger.collectAsStateWithLifecycle()
 
     var editName by remember { mutableStateOf(false) }
     var pickEmblem by remember { mutableStateOf(false) }
@@ -139,6 +142,46 @@ fun ProfileScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick:
             val title = TitleEngine.resolve(cs, titleId)
             val equippedEntry = badges.firstOrNull { it.key == equipped }
 
+            // The trading card. Touch it and the light moves.
+            val cardData = CardData(
+                name = name,
+                title = title.name,
+                rankTitle = s.level.rankTitle,
+                tier = s.level.tier,
+                level = s.level.level,
+                xpInto = s.level.xpIntoLevel,
+                xpFor = s.level.xpForLevel,
+                totalXp = s.level.totalXp,
+                flame = s.flame,
+                flameName = flameName(s.flame),
+                streakTotal = s.streak.total,
+                streakPure = s.streak.pure,
+                streakBest = s.streak.bestTotal,
+                totalSteps = cs.totalSteps,
+                totalKm = cs.totalKm,
+                bestDay = ledger.maxOfOrNull { it.steps } ?: 0,
+                journeyPct = ((journey?.fraction ?: cs.journeyFraction) * 100f).toInt(),
+                chapter = journey?.chapter?.title ?: "",
+                trialsWon = cs.challengesWon,
+                legendaryWon = cs.legendaryWon,
+                mendersUsed = cs.mendersUsed,
+                badgesEarned = badges.size,
+                showcase = showcase.mapNotNull { k -> badges.firstOrNull { it.key == k } }
+                    .map { CardBadge(it.glyph, it.kind, it.rim, it.stitched) },
+                goal = goal,
+                daysWalked = ledger.size,
+            )
+            AshCardView(cardData)
+            Button(
+                onClick = {
+                    scope.launch {
+                        val ok = withContext(Dispatchers.IO) { ProfileCard.save(context, cardData) }
+                        Toast.makeText(context, if (ok) "Saved to Pictures/Ashstride" else "Could not save the card", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Save card as image") }
+
             Panel(tint = tc) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AvatarView(name, tc, s.level.immortalRank)
@@ -149,7 +192,7 @@ fun ProfileScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick:
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.clickable { editName = true },
                         )
-                        Text("tap to rename", style = MaterialTheme.typography.labelSmall, color = Smoke)
+                        Text("tap to rename", style = MaterialTheme.typography.labelSmall, color = Dim)
                         Spacer(Modifier.height(6.dp))
                         Pill(title.name, tc)
                         Spacer(Modifier.height(4.dp))
@@ -206,7 +249,7 @@ fun ProfileScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick:
                             Text(t.name, color = if (t.earned) MaterialTheme.colorScheme.onSurface else Smoke, style = MaterialTheme.typography.bodyLarge)
                             Text(t.how, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        if (t.id == title.id) Pill("Worn", Gold) else if (!t.earned) Pill("Locked", Cinder)
+                        if (t.id == title.id) Pill("Worn", Gold) else if (!t.earned) Pill("Locked", Dim)
                     }
                 }
             }
@@ -231,27 +274,10 @@ fun ProfileScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick:
                 Text("Day-of-week averages, months, records.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            Button(
-                onClick = {
-                    val d = CardData(
-                        name = name,
-                        title = title.name,
-                        rank = s.level.rankTitle,
-                        level = s.level.level,
-                        streak = s.streak.total,
-                        steps = Fmt.n(cs.totalSteps),
-                        km = "${Fmt.n(Math.round(cs.totalKm))} km",
-                        journey = journey?.let { "${(it.fraction * 100f).toInt()}% of the road  |  ${it.chapter.title}" } ?: "",
-                        tierColor = tc.toArgb(),
-                        flame = s.flame,
-                    )
-                    scope.launch {
-                        val ok = withContext(Dispatchers.IO) { ProfileCard.save(context, d) }
-                        Toast.makeText(context, if (ok) "Saved to Pictures/Ashstride" else "Could not save the card", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Export profile card") }
+            Panel(modifier = Modifier.clickable { onOpen(SubScreen.SETTINGS) }) {
+                SectionTitle("Settings  >")
+                Text("Goal, alerts, widget, backup and the background-sync guide.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         Spacer(Modifier.height(8.dp))
     }

@@ -34,6 +34,9 @@ interface DayDao {
     @Query("SELECT MAX(date) FROM day_entry WHERE source = :source")
     suspend fun newestDateBySource(source: String): String?
 
+    @Query("DELETE FROM day_entry")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM day_entry ORDER BY date DESC")
     fun observeAll(): Flow<List<DayEntry>>
 
@@ -64,6 +67,15 @@ interface XpDao {
     @Insert
     suspend fun insert(row: XpEvent)
 
+    @Insert
+    suspend fun insertAll(rows: List<XpEvent>)
+
+    @Query("SELECT * FROM xp_event")
+    suspend fun getAll(): List<XpEvent>
+
+    @Query("DELETE FROM xp_event")
+    suspend fun deleteAll()
+
     /** How many events of [type] already exist for [ref]. Used so a reward is only ever paid once. */
     @Query("SELECT COUNT(*) FROM xp_event WHERE type = :type AND ref = :ref")
     suspend fun countFor(type: String, ref: String): Int
@@ -73,6 +85,15 @@ interface XpDao {
 interface MendDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(row: MendLog)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(rows: List<MendLog>)
+
+    @Query("SELECT * FROM mend_log")
+    suspend fun getAll(): List<MendLog>
+
+    @Query("DELETE FROM mend_log")
+    suspend fun deleteAll()
 
     @Query("SELECT COUNT(*) FROM mend_log")
     fun observeCount(): Flow<Int>
@@ -89,12 +110,22 @@ interface ChallengeDao {
     @Query("SELECT * FROM challenge_week")
     suspend fun getAll(): List<ChallengeWeek>
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(rows: List<ChallengeWeek>)
+
+    @Query("DELETE FROM challenge_week")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM challenge_week WHERE weekStart = :weekStart")
     suspend fun get(weekStart: String): ChallengeWeek?
 
     /** Locks the pick. Only works while the week is still OPEN, so a pick can never change. Returns rows changed. */
     @Query("UPDATE challenge_week SET picked = :picked, status = :status WHERE weekStart = :weekStart AND status = 'OPEN'")
     suspend fun pick(weekStart: String, picked: String, status: String): Int
+
+    /** Swaps in freshly generated cards, only while nobody has picked one yet. */
+    @Query("UPDATE challenge_week SET offersJson = :json WHERE weekStart = :weekStart AND status = 'OPEN'")
+    suspend fun replaceOffers(weekStart: String, json: String): Int
 
     @Query("UPDATE challenge_week SET status = :status, resolvedAtEpochMs = :at WHERE weekStart = :weekStart")
     suspend fun resolve(weekStart: String, status: String, at: Long)
@@ -119,4 +150,16 @@ interface BucketDao {
 
     @Query("SELECT COUNT(*) FROM step_bucket")
     suspend fun count(): Int
+}
+
+@Dao
+interface BadgeDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(rows: List<BadgeUnlock>)
+
+    @Query("SELECT * FROM badge_unlock")
+    suspend fun getAll(): List<BadgeUnlock>
+
+    @Query("DELETE FROM badge_unlock")
+    suspend fun deleteAll()
 }

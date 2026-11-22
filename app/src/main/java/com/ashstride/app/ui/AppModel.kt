@@ -283,10 +283,19 @@ class AppModel(private val app: AshstrideApp) {
                         }
                     }
                     val currentStart = ChallengeGenerator.weekStartFor(today)
+                    // Cards written by an older balance table are redrawn once, but only if nothing was picked.
+                    val staleRow = db.challengeDao().get(currentStart.toString())
+                    if (staleRow != null && staleRow.status == WeekStatus.OPEN && uiPrefs.offersVersion() < ChallengeGenerator.GENERATOR_VERSION) {
+                        val fresh = ChallengeGenerator.offersFor(currentStart, ledgerNow, goalNow, hourlyAvailable = buckets.isNotEmpty())
+                        db.challengeDao().replaceOffers(currentStart.toString(), ChallengeCodec.encode(fresh))
+                    }
                     if (db.challengeDao().get(currentStart.toString()) == null) {
                         val offers = ChallengeGenerator.offersFor(currentStart, ledgerNow, goalNow, hourlyAvailable = buckets.isNotEmpty())
                         db.challengeDao().insert(ChallengeWeek(currentStart.toString(), ChallengeCodec.encode(offers)))
                     }
+                }
+                if (uiPrefs.offersVersion() < ChallengeGenerator.GENERATOR_VERSION) {
+                    uiPrefs.setOffersVersion(ChallengeGenerator.GENERATOR_VERSION)
                 }
             }
         }

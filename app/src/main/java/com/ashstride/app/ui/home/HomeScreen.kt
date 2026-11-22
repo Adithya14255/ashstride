@@ -50,8 +50,10 @@ import com.ashstride.app.ui.components.TierEmblem
 import com.ashstride.app.ui.components.flameColors
 import com.ashstride.app.ui.components.flameName
 import com.ashstride.app.ui.health.HealthConnectCard
+import com.ashstride.app.ui.theme.AshDeep
 import com.ashstride.app.ui.theme.AshHigh
 import com.ashstride.app.ui.theme.Cinder
+import com.ashstride.app.ui.theme.Dim
 import com.ashstride.app.ui.theme.Ember
 import com.ashstride.app.ui.theme.Gold
 import com.ashstride.app.ui.theme.Parchment
@@ -92,7 +94,7 @@ fun HomeScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: ()
             val shownStreak by animateIntAsState(s.streak.total, tween(900), label = "streak")
             Panel(tint = flameColors(s.flame).outer) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    FlameView(s.flame, Modifier.width(128.dp).height(168.dp))
+                    FlameView(s.flame, Modifier.width(150.dp).height(196.dp))
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text(
@@ -136,8 +138,8 @@ fun HomeScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: ()
                         val bg: Color
                         val fg: Color
                         when {
-                            row == null -> { bg = AshHigh; fg = Cinder }
-                            row.met -> { bg = Ember; fg = Color(0xFF211D1A) }
+                            row == null -> { bg = AshHigh; fg = Dim }
+                            row.met -> { bg = Ember; fg = AshDeep }
                             row.mended -> { bg = AshHigh; fg = Gold }
                             else -> { bg = AshHigh; fg = MaterialTheme.colorScheme.onSurfaceVariant }
                         }

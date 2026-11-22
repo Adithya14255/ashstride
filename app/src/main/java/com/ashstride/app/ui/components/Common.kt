@@ -76,7 +76,7 @@ fun BackHeader(title: String, goal: Int, onGoalClick: () -> Unit, onBack: () -> 
 /** A raised card. [tint] washes a little colour over the top, used for the flame hero and the shrine. */
 @Composable
 fun Panel(modifier: Modifier = Modifier, tint: Color? = null, content: @Composable ColumnScope.() -> Unit) {
-    val top = if (tint == null) Color(0xFF312B26) else androidx.compose.ui.graphics.lerp(Color(0xFF312B26), tint, 0.18f)
+    val top = if (tint == null) Color(0xFF453B33) else androidx.compose.ui.graphics.lerp(Color(0xFF453B33), tint, 0.18f)
     Column(
         modifier = modifier
             .fillMaxWidth()

@@ -94,23 +94,30 @@ class ChallengeGeneratorTest {
     @Test
     fun targetsAtTheDefaultGoalMatchTheSpec() {
         val all = manyWeeks(10_000, hourly = false)
-        assertEquals(75_000, all.pick(ChallengeTier.EASY, ChallengeType.WEEKLY_TOTAL).targetSteps)
-        assertEquals(85_000, all.pick(ChallengeTier.MEDIUM, ChallengeType.WEEKLY_TOTAL).targetSteps)
-        assertEquals(97_000, all.pick(ChallengeTier.HARD, ChallengeType.WEEKLY_TOTAL).targetSteps)
-        assertEquals(108_000, all.pick(ChallengeTier.LEGENDARY, ChallengeType.WEEKLY_TOTAL).targetSteps)
+        assertEquals(66_000, all.pick(ChallengeTier.EASY, ChallengeType.WEEKLY_TOTAL).targetSteps)
+        assertEquals(80_000, all.pick(ChallengeTier.MEDIUM, ChallengeType.WEEKLY_TOTAL).targetSteps)
+        assertEquals(88_000, all.pick(ChallengeTier.HARD, ChallengeType.WEEKLY_TOTAL).targetSteps)
+        assertEquals(102_000, all.pick(ChallengeTier.LEGENDARY, ChallengeType.WEEKLY_TOTAL).targetSteps)
 
+        val easyDays = all.pick(ChallengeTier.EASY, ChallengeType.DAYS_ABOVE)
+        assertEquals(5, easyDays.targetDays)
+        assertEquals(10_000, easyDays.targetSteps)
+        val mediumDays = all.pick(ChallengeTier.MEDIUM, ChallengeType.DAYS_ABOVE)
+        assertEquals(5, mediumDays.targetDays)
+        assertEquals(11_000, mediumDays.targetSteps)
         val hardDays = all.pick(ChallengeTier.HARD, ChallengeType.DAYS_ABOVE)
         assertEquals(3, hardDays.targetDays)
-        assertEquals(14_000, hardDays.targetSteps)
-        assertEquals(22_000, all.pick(ChallengeTier.HARD, ChallengeType.SINGLE_DAY_PEAK).targetSteps)
-        assertEquals(27_000, all.pick(ChallengeTier.LEGENDARY, ChallengeType.SINGLE_DAY_PEAK).targetSteps)
+        assertEquals(13_000, hardDays.targetSteps)
+        assertEquals(18_000, all.pick(ChallengeTier.HARD, ChallengeType.SINGLE_DAY_PEAK).targetSteps)
+        assertEquals(23_000, all.pick(ChallengeTier.LEGENDARY, ChallengeType.SINGLE_DAY_PEAK).targetSteps)
+        assertEquals(20_000, all.pick(ChallengeTier.EASY, ChallengeType.WEEKEND_ONLY).targetSteps)
     }
 
     @Test
     fun targetsScaleWithTheGoal() {
         val all = manyWeeks(20_000, hourly = false)
-        assertEquals(150_000, all.pick(ChallengeTier.EASY, ChallengeType.WEEKLY_TOTAL).targetSteps)
-        assertEquals(44_000, all.pick(ChallengeTier.HARD, ChallengeType.SINGLE_DAY_PEAK).targetSteps)
+        assertEquals(132_000, all.pick(ChallengeTier.EASY, ChallengeType.WEEKLY_TOTAL).targetSteps)
+        assertEquals(36_000, all.pick(ChallengeTier.HARD, ChallengeType.SINGLE_DAY_PEAK).targetSteps)
         assertEquals(20_000, all.pick(ChallengeTier.EASY, ChallengeType.DAYS_ABOVE).targetSteps)
     }
 
@@ -162,10 +169,50 @@ class ChallengeGeneratorTest {
     }
 
     @Test
-    fun mediumDistanceCardIsRoughlyThreeQuartersOfAKmPerThousandSteps() {
+    fun mediumDistanceCardUsesTheRealKmPerStepOfTheHistory() {
         val all = manyWeeks(10_000, hourly = false)
         val distance = all.pick(ChallengeTier.MEDIUM, ChallengeType.DISTANCE)
-        assertEquals(64.0, distance.targetKm, 0.0001) // 85,000 x 0.00075 = 63.75 -> 64
+        assertEquals(62.0, distance.targetKm, 0.0001) // 80,000 x 0.00077 = 61.6 -> 62
+    }
+
+    // ---- Balance --------------------------------------------------------------------------
+
+    /** Session 6 regression: Easy must be easier than Medium, and Medium than Hard, whatever card types come up. */
+    @Test
+    fun tiersGetHarderOnTheImportedHistoryWhateverTheCardType() {
+        val seed = TestData.seed()
+        var week = date("2026-01-03")
+        var checked = 0
+        while (!week.isAfter(date("2026-11-21"))) {
+            val offers = ChallengeGenerator.offersFor(week, seed, 10_000)
+            val odds = offers.map { ChallengeOdds.historicalRate(it, seed) }
+            assertTrue("week $week has odds", odds.all { it != null })
+            assertTrue("week $week: ${offers.map { it.type }} $odds", odds[0]!! > odds[1]!! && odds[1]!! > odds[2]!!)
+            checked++
+            week = week.plusWeeks(1)
+        }
+        assertEquals(47, checked)
+    }
+
+    @Test
+    fun oddsAreNullForContinuousRunAndShortHistories() {
+        val run = Challenge("x", date("2026-11-21"), ChallengeTier.EASY, ChallengeType.CONTINUOUS_RUN, 300, 0, BadgeRim.BRONZE, targetSteps = 4_000, windowMinutes = 60)
+        assertEquals(null, ChallengeOdds.historicalRate(run, TestData.seed()))
+        val total = Challenge("y", date("2026-11-21"), ChallengeTier.EASY, ChallengeType.WEEKLY_TOTAL, 300, 0, BadgeRim.BRONZE, targetSteps = 60_000)
+        assertEquals(null, ChallengeOdds.historicalRate(total, emptyList()))
+    }
+
+    @Test
+    fun oddsCountClearedWeeks() {
+        val week = date("2026-11-21")
+        val days = steadyWeeks(week, 10, 10_000) // 70,000 every week
+        val easy = Challenge("a", week, ChallengeTier.EASY, ChallengeType.WEEKLY_TOTAL, 300, 0, BadgeRim.BRONZE, targetSteps = 70_000)
+        val hard = Challenge("b", week, ChallengeTier.HARD, ChallengeType.WEEKLY_TOTAL, 1_500, 1, BadgeRim.GOLD, targetSteps = 70_001)
+        assertEquals(1.0, ChallengeOdds.historicalRate(easy, days)!!, 0.0001)
+        assertEquals(0.0, ChallengeOdds.historicalRate(hard, days)!!, 0.0001)
+        assertEquals("You clear this almost every week", ChallengeOdds.label(1.0))
+        assertEquals("Cleared in 69% of your recent weeks", ChallengeOdds.label(0.69))
+        assertEquals(null, ChallengeOdds.label(null))
     }
 
     // ---- Adaptation -----------------------------------------------------------------------
@@ -182,7 +229,7 @@ class ChallengeGeneratorTest {
         assertEquals(1.15, ChallengeGenerator.adaptationFactor(week, days, 10_000), 0.0001)
         val offers = ChallengeGenerator.offersFor(week, days, 10_000, false)
         assertEquals(ChallengeType.WEEKLY_TOTAL, offers[0].type)
-        assertEquals(86_000, offers[0].targetSteps) // 75,000 x 1.15 = 86,250 -> 86,000
+        assertEquals(76_000, offers[0].targetSteps) // 66,000 x 1.15 = 75,900 -> 76,000
     }
 
     @Test

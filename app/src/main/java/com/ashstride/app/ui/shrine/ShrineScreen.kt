@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ashstride.app.AshstrideApp
 import com.ashstride.app.domain.BadgeKind
 import com.ashstride.app.domain.Challenge
+import com.ashstride.app.domain.ChallengeOdds
 import com.ashstride.app.domain.ChallengeProgress
 import com.ashstride.app.domain.ChallengeText
 import com.ashstride.app.domain.MenderRules
@@ -58,6 +59,8 @@ import com.ashstride.app.ui.components.SectionTitle
 import com.ashstride.app.ui.components.SoftBar
 import com.ashstride.app.ui.components.rimColor
 import com.ashstride.app.ui.theme.Cinder
+import com.ashstride.app.ui.theme.Dim
+import com.ashstride.app.ui.theme.EmberLight
 import com.ashstride.app.ui.theme.Ember
 import com.ashstride.app.ui.theme.Gold
 import com.ashstride.app.ui.theme.Smoke
@@ -155,21 +158,21 @@ fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     for (c in sh.offers) {
-                        ChallengeCard(c, CardMode.SEALED, null) { if (sh.canPick) confirm = c }
+                        ChallengeCard(c, CardMode.SEALED, null, ChallengeOdds.label(sh.odds[c.id])) { if (sh.canPick) confirm = c }
                     }
                 }
                 else -> {
                     val picked = sh.picked
                     SectionTitle("This week's trial  |  $weekLabel")
                     if (picked != null) {
-                        ChallengeCard(picked, CardMode.ACTIVE, sh.progress, onClick = null)
+                        ChallengeCard(picked, CardMode.ACTIVE, sh.progress, ChallengeOdds.label(sh.odds[picked.id]), onClick = null)
                         val statusLine = when (sh.status) {
                             WeekStatus.WON -> "Complete. The reward is yours."
                             else -> "${sh.daysLeft} day(s) left in the week."
                         }
                         Text(statusLine, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    for (c in sh.offers) if (c.id != sh.picked?.id) ChallengeCard(c, CardMode.DIM, null, onClick = null)
+                    for (c in sh.offers) if (c.id != sh.picked?.id) ChallengeCard(c, CardMode.DIM, null, null, onClick = null)
                 }
             }
 
@@ -216,7 +219,7 @@ fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
 private const val ShrineStateNone = "NONE"
 
 @Composable
-private fun ChallengeCard(c: Challenge, mode: CardMode, progress: ChallengeProgress?, onClick: (() -> Unit)?) {
+private fun ChallengeCard(c: Challenge, mode: CardMode, progress: ChallengeProgress?, odds: String?, onClick: (() -> Unit)?) {
     val rim = rimColor(c.rim)
     val shape = RoundedCornerShape(22.dp)
     val dim = mode == CardMode.DIM
@@ -228,7 +231,7 @@ private fun ChallengeCard(c: Challenge, mode: CardMode, progress: ChallengeProgr
     var mod = Modifier
         .fillMaxWidth()
         .clip(shape)
-        .background(Brush.verticalGradient(listOf(Color(0xFF332C27), Color(0xFF2A2521))), shape)
+        .background(Brush.verticalGradient(listOf(Color(0xFF453B33), Color(0xFF3B332D))), shape)
         .border(if (dim) 1.dp else 2.dp, borderBrush, shape)
     if (onClick != null) mod = mod.clickable(onClick = onClick)
     Column(mod.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -251,6 +254,7 @@ private fun ChallengeCard(c: Challenge, mode: CardMode, progress: ChallengeProgr
         if (!dim) {
             Text(ChallengeText.describe(c), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             Text(ChallengeText.rewardText(c), color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.labelLarge)
+            if (odds != null) Text(odds, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         if (progress != null) {
             SoftBar(progress.fraction.toFloat(), color = if (progress.done) Gold else rim)
@@ -261,7 +265,7 @@ private fun ChallengeCard(c: Challenge, mode: CardMode, progress: ChallengeProgr
             )
         }
         if (mode == CardMode.SEALED && onClick != null) {
-            Text("Tap to choose", style = MaterialTheme.typography.labelMedium, color = Ember)
+            Text("Tap to choose", style = MaterialTheme.typography.labelMedium, color = EmberLight)
         }
     }
 }
@@ -279,7 +283,7 @@ private fun PastRow(w: PastWeek, fmt: DateTimeFormatter) {
         val (label, color) = when (w.status) {
             WeekStatus.WON -> "Won" to Gold
             WeekStatus.LOST -> "Lost" to Smoke
-            else -> "Skipped" to Cinder
+            else -> "Skipped" to Dim
         }
         Pill(label, color)
     }

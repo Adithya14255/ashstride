@@ -4,6 +4,7 @@ import com.ashstride.app.data.db.ChallengeWeek
 import com.ashstride.app.domain.Challenge
 import com.ashstride.app.domain.ChallengeCodec
 import com.ashstride.app.domain.ChallengeGenerator
+import com.ashstride.app.domain.ChallengeOdds
 import com.ashstride.app.domain.ChallengeProgress
 import com.ashstride.app.domain.LedgerDay
 import com.ashstride.app.domain.ShrineEngine
@@ -29,6 +30,8 @@ data class ShrineState(
     val daysLeft: Int,
     val canPick: Boolean,
     val past: List<PastWeek>,
+    /** Challenge id -> share of your recent weeks it would have cleared (null when unknown). */
+    val odds: Map<String, Double?> = emptyMap(),
 ) {
     companion object {
         const val NONE = "NONE"
@@ -69,6 +72,7 @@ data class ShrineState(
                 daysLeft = ShrineEngine.daysLeft(ws, today),
                 canPick = ShrineEngine.canPick(status, ws, today),
                 past = past,
+                odds = offers.associate { it.id to ChallengeOdds.historicalRate(it, ledger) },
             )
         }
     }

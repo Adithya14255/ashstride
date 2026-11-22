@@ -7,12 +7,22 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.ashstride.app.AshstrideApp
+import com.ashstride.app.notify.NotificationEngine
+import com.ashstride.app.widget.AshWidgetProvider
 import java.util.concurrent.TimeUnit
 
 class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val app = applicationContext as AshstrideApp
-        return when (app.healthSync.sync(background = true)) {
+        val result = app.healthSync.sync(background = true)
+        // Fresh steps may cross the goal or earn a badge, so check alerts and redraw the widget right away.
+        try {
+            NotificationEngine.run(app)
+            AshWidgetProvider.refresh(app)
+        } catch (e: Exception) {
+            // Alerts are best effort; the 15-minute reminder job tries again.
+        }
+        return when (result) {
             is SyncResult.Failed -> Result.retry()
             else -> Result.success()
         }

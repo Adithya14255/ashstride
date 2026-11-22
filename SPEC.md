@@ -4,7 +4,7 @@ Android step-tracking game for one person (OnePlus 12, OxygenOS). Offline, no ac
 A traveler walks out of the ashes toward a far destination; every step feeds the fire.
 
 ## 1. Stack
-Kotlin, Jetpack Compose (Material 3), Room, WorkManager, DataStore, Health Connect client, Glance widget.
+Kotlin, Jetpack Compose (Material 3), Room, WorkManager, DataStore, Health Connect client, home-screen widget (plain RemoteViews; Glance was dropped in Session 6, see PROJECT_STATE).
 minSdk 29, targetSdk 35. Debug-signed APK built by GitHub Actions. All art (flame, emblems, badges) is drawn in code: no image assets.
 
 ## 2. Data and architecture
@@ -48,7 +48,7 @@ XP and rewards scale by goal / 10,000, clamped 0.5x to 2x. Weekly challenge targ
 ## 7. Weekly challenges (story: the weekend shrine)
 - Week runs **Saturday to Friday**. The traveler reaches the shrine on Saturday: last week's result is settled, three sealed cards appear, you **pick one** and it locks. Progress counts from the start of the cycle.
 - Cards: Easy, Medium, Hard. Every 4th week Hard becomes **Legendary**.
-- Targets adapt to the last 8 weeks and the current goal. At goal 10k, roughly: Easy 75k week; Medium 85k; Hard 97k, or 3 days of 14k+, or one 22k day; Legendary 108k or a 27k day.
+- Targets adapt to the last 8 weeks and the current goal. At goal 10k, roughly (re-balanced in Session 6 so every card of a tier is about as hard as its siblings, measured against the imported history): Easy 66k week, or 5 days at goal, or a 20k weekend; Medium 80k, or 5 days of 11k+, or 62 km; Hard 88k, or 3 days of 13k+, or one 18k day; Legendary 102k or a 23k day. Each card shows how often it would have been cleared in your last 26 weeks.
 - Challenge types: weekly total, days above a threshold, single-day peak, distance, weekend-only, and **Continuous Run** (most steps in a sliding window): Easy 4k/1h, Medium 5k/1h, Hard 10k/2h, Legendary 15k/3h.
 - Rewards: Easy/Medium = badge + XP. Hard = badge + XP + 1 shard. Legendary = prismatic badge + XP + 2 shards. Badge rim: bronze, silver, gold, prismatic.
 

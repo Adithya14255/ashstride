@@ -96,8 +96,20 @@ Before granting access: same as 0.2.0 (streak 118, days 505, steps 6,406,335, 4,
 - Profile: Wanderer name, Paragon Lv 82, 14 titles earned, 11 badges.
 - CI: 128 tests green (95 + 33). Paste red lines into the next session if not; no compiler was available, so a first-build compile error is possible.
 
+## Session 6 (0.6.0)
+Changes (UNVERIFIED until the first CI run: this session was written without a compiler. If the build fails, paste the first error and it is a one-line fix):
+- **Quest balance fix.** Old Easy weekly 80k cleared 81% of your past weeks but Medium "5 days at goal" 90%, so Easy was harder. New targets in `ChallengeGenerator` (see SPEC 7), calibrated on the 72 imported weeks to roughly Easy 90%+, Medium ~65%, Hard ~30%, Legendary ~10% for every card type. `GENERATOR_VERSION = 2`: an OPEN (unpicked) current week is regenerated once on first launch; picked weeks are never touched. `ChallengeOdds` replays a card over the last 26 weeks and the Shrine shows "Cleared in N% of your recent weeks". `tiersGetHarderOnTheImportedHistoryWhateverTheCardType` guards the ordering from 2026-01 onward (the first weeks of history are lower than the 0.9 adaptation floor can follow). Distance now uses 0.00077 km/step, the real ratio of your data.
+- **Flame redesign** (`FlameShapes`, `FlameView`): slim S-curve body with a sweeping tip, up to three side tongues (scaled and mirrored copies), nested layers, flowing energy streaks, neon edge, pulsing halo, embers with sparkles, rotating Solar corona. New launcher icon generated from the same geometry.
+- **Profile card** (`ProfileCard.kt`): gilded trading card with a live flame, rainbow foil, sheen and sparkles that follow a finger resting on the card (idle sway otherwise); foil strength rises with tier, Immortal gets a prismatic border. Shows streak (pure/best), journey %, steps/km, trials, Menders, XP bar, showcase badges, goal. PNG export uses the same painter.
+- **Contrast**: lighter surfaces, `Smoke`/`Dim` text colours (all at least 4.5:1), `Cinder` is strokes only, `EmberLight` for orange text, larger small type, M3 surfaceContainer roles set so dialogs match.
+- **Notifications** (`NotificationRules` pure and tested, `NotificationEngine`, `ReminderWorker` every 15 min plus after each sync): streak at risk (once per evening), shrine open (Saturday), milestones (writes `badge_unlock`; first run backfills silently), quiet hours. Needs the notification permission (Settings has the button).
+- **Widget**: `AshWidgetProvider` on RemoteViews, not Glance. Reason: no compiler available, RemoteViews adds no dependency and no version risk. The ring and flame are drawn into a bitmap with the app's own flame painter.
+- **Settings** (Profile > Settings): goal, alert times, quiet hours, widget help, JSON backup/restore, CSV export/import (safety copy kept in app storage before any overwrite), OxygenOS background-sync guide. Health Connect write-back stays off by design (double counting); no toggle was built.
+
+Known quirks carried over: picking a card late in the week can lock in progress already made (a Weekend card picked on Monday).
+
 ## Remaining plan
-- **Session 6:** notifications (at-risk, shrine-open on Saturday, milestones, quiet hours; write `badge_unlock`), Glance widget (steps, goal ring, flame), Settings (goal, quiet hours, write-back toggle), CSV/JSON export + import + local backup, OxygenOS battery guide, polish and release. Consider moving Stats / Badges back to a "More" entry if you miss the tabs.
+- Fix any first-build compile errors from Session 6. Then real-world polish from using it for a week (card layout on your screen, widget size, alert timing).
 
 ## Open items
 - Flame, tier emblems and badge art are all drawn now; tune colours and proportions on device after looking at them.

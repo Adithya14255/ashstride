@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Ashstride</string>
+    <string name="widget_description">Today\'s steps, goal ring and streak flame</string>
 </resources>
