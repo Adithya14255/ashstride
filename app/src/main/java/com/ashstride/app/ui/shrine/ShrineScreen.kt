@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ashstride.app.AshstrideApp
 import com.ashstride.app.domain.BadgeKind
 import com.ashstride.app.domain.Challenge
+import com.ashstride.app.domain.ChallengeGenerator
 import com.ashstride.app.domain.ChallengeOdds
 import com.ashstride.app.domain.ChallengeProgress
 import com.ashstride.app.domain.ChallengeText
@@ -51,6 +53,7 @@ import com.ashstride.app.domain.WeekStatus
 import com.ashstride.app.ui.PastWeek
 import com.ashstride.app.ui.components.BadgeArt
 import com.ashstride.app.ui.components.FlameShapes
+import com.ashstride.app.ui.components.FlameShowcase
 import com.ashstride.app.ui.components.FlameView
 import com.ashstride.app.ui.components.Panel
 import com.ashstride.app.ui.components.Pill
@@ -71,7 +74,7 @@ import java.util.Locale
 private enum class CardMode { SEALED, ACTIVE, DIM }
 
 @Composable
-fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: () -> Unit) {
+fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: () -> Unit, onOpenBadges: () -> Unit, onOpenTierMap: (Int) -> Unit) {
     val model = app.model
     val shrine by model.shrine.collectAsStateWithLifecycle()
     val inventory by model.inventory.collectAsStateWithLifecycle()
@@ -80,6 +83,7 @@ fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
     val goal by model.goal.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var confirm by remember { mutableStateOf<Challenge?>(null) }
+    var showFlame by remember { mutableStateOf(false) }
     val dateFmt = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
 
     Column(
@@ -103,7 +107,13 @@ fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
                 Box(Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {
                     ToriiArt(Modifier.fillMaxSize())
                     val s = snap
-                    if (s != null) FlameView(s.flame, Modifier.size(width = 70.dp, height = 92.dp).padding(top = 8.dp))
+                    if (s != null) FlameView(
+                        s.flame,
+                        Modifier
+                            .size(width = 70.dp, height = 92.dp)
+                            .padding(top = 8.dp)
+                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { showFlame = true },
+                    )
                 }
                 if (scene != null) {
                     Text(
@@ -138,14 +148,19 @@ fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
                     }
                 }
                 Text(
-                    "Hard trials give 1 shard, Legendary give 2. Three shards forge a Mender, which fixes one missed day on the Streak page.",
+                    "Hard trials give 1 shard, Legendary give 2. Great milestones pay shards too: long streaks, lifetime steps and far destinations on the road. Three shards forge a Mender, which fixes one missed day on the Streak page.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            // This week.
-            val weekLabel = dateFmt.format(sh.weekStart) + " - " + dateFmt.format(sh.weekStart.plusDays(6))
+            HonorPanel(app, onOpenBadges)
+
+            // This week runs Monday to Sunday midnight; the next shrine opens on the Monday after.
+            val dayFmt = DateTimeFormatter.ofPattern("EEE d MMM", Locale.getDefault())
+            val weekEnd = ChallengeGenerator.weekEndFor(sh.weekStart)
+            val nextShrine = weekEnd.plusDays(1)
+            val weekLabel = dayFmt.format(sh.weekStart) + " > " + dayFmt.format(weekEnd)
             when {
                 sh.status == ShrineStateNone -> {
                     Panel { Text("The shrine is quiet. Cards appear once your history has loaded.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -153,7 +168,7 @@ fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
                 sh.status == WeekStatus.OPEN -> {
                     SectionTitle("Choose your trial  |  $weekLabel")
                     Text(
-                        "Pick one card. It locks the moment you choose, and progress counts from Saturday.",
+                        "Pick one card. It locks the moment you choose, and progress counts from Monday.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -167,8 +182,8 @@ fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
                     if (picked != null) {
                         ChallengeCard(picked, CardMode.ACTIVE, sh.progress, ChallengeOdds.label(sh.odds[picked.id]), onClick = null)
                         val statusLine = when (sh.status) {
-                            WeekStatus.WON -> "Complete. The reward is yours."
-                            else -> "${sh.daysLeft} day(s) left in the week."
+                            WeekStatus.WON -> "Complete. The reward is yours. The next shrine opens ${dayFmt.format(nextShrine)}."
+                            else -> "${sh.daysLeft} day(s) left. The next shrine opens ${dayFmt.format(nextShrine)}."
                         }
                         Text(statusLine, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -184,6 +199,15 @@ fun ShrineScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
             }
         }
         Spacer(Modifier.height(8.dp))
+    }
+
+    val flameNow = snap
+    if (showFlame && flameNow != null) {
+        FlameShowcase(
+            info = flameNow.flame,
+            onOpenTierMap = { showFlame = false; onOpenTierMap(0) },
+            onDismiss = { showFlame = false },
+        )
     }
 
     val c = confirm
@@ -278,7 +302,7 @@ private fun PastRow(w: PastWeek, fmt: DateTimeFormatter) {
                 w.picked?.let { ChallengeText.title(it) + "  |  " + ChallengeText.tierName(it.tier) } ?: "No card picked",
                 style = MaterialTheme.typography.bodyLarge,
             )
-            Text("Week of ${fmt.format(w.weekStart)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(fmt.format(w.weekStart) + " > " + fmt.format(ChallengeGenerator.weekEndFor(w.weekStart)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         val (label, color) = when (w.status) {
             WeekStatus.WON -> "Won" to Gold

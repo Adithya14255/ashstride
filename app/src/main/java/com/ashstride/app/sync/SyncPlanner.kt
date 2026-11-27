@@ -75,6 +75,13 @@ object SyncPlanner {
         return fromMs + (offset / sliceMs) * sliceMs
     }
 
+    /** Real ratio of the imported history, used when the primary source writes steps but no distance. */
+    const val KM_PER_STEP = 0.00077
+
+    /** Distance for a day: the source's own figure when it has one, otherwise an estimate from the steps. */
+    fun kmOrEstimate(steps: Int, km: Double): Double =
+        if (km > 0.0 || steps <= 0) km else steps * KM_PER_STEP
+
     /** Aggregate minus manual entries. The aggregate API de-duplicates sources but cannot exclude manual records itself. */
     fun netSteps(aggregate: Long, manual: Long): Int = (aggregate - manual).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
     fun netKm(aggregateKm: Double, manualKm: Double): Double = (aggregateKm - manualKm).coerceAtLeast(0.0)

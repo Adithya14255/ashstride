@@ -94,7 +94,9 @@ object ChallengeText {
     }
 
     fun describe(c: Challenge): String = when (c.type) {
-        ChallengeType.WEEKLY_TOTAL -> "Walk ${n(c.targetSteps)} steps between Saturday and Friday."
+        ChallengeType.WEEKLY_TOTAL ->
+            if (c.weekStart.isBefore(ChallengeGenerator.WEEK_CUTOVER)) "Walk ${n(c.targetSteps)} steps between Saturday and Friday."
+            else "Walk ${n(c.targetSteps)} steps between Monday and Sunday."
         ChallengeType.DAYS_ABOVE -> "Reach ${n(c.targetSteps)} steps on ${c.targetDays} different days."
         ChallengeType.SINGLE_DAY_PEAK -> "Walk ${n(c.targetSteps)} steps in a single day."
         ChallengeType.DISTANCE -> "Cover ${n(Math.round(c.targetKm).toInt())} km this week."
@@ -123,10 +125,10 @@ object ChallengeText {
 
 /** Rules for the weekend shrine. Pure: the caller supplies the date, the ledger and the step samples. */
 object ShrineEngine {
-    /** Days from Saturday during which a card may still be picked. 7 = any day of the week (spec: progress counts from Saturday). */
+    /** Days from Saturday during which a card may still be picked. 7 = any day of the week (progress counts from the first day of the week). */
     const val PICK_WINDOW_DAYS = 7
 
-    fun weekEnd(weekStart: LocalDate): LocalDate = weekStart.plusDays(6)
+    fun weekEnd(weekStart: LocalDate): LocalDate = ChallengeGenerator.weekEndFor(weekStart)
 
     fun isOver(weekStart: LocalDate, today: LocalDate): Boolean = today.isAfter(weekEnd(weekStart))
 
@@ -143,10 +145,10 @@ object ShrineEngine {
         return ChronoUnit.DAYS.between(weekStart, today) < PICK_WINDOW_DAYS
     }
 
-    /** Only samples from inside the Saturday-to-Friday week count (local midnight to midnight). */
+    /** Only samples from inside the week (Monday to Sunday) count (local midnight to midnight). */
     fun samplesInWeek(samples: List<StepSample>, weekStart: LocalDate, zone: ZoneId): List<StepSample> {
         val from = weekStart.atStartOfDay(zone).toInstant().toEpochMilli()
-        val to = weekStart.plusDays(7).atStartOfDay(zone).toInstant().toEpochMilli()
+        val to = weekEnd(weekStart).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
         return samples.filter { it.epochMs >= from && it.epochMs < to }
     }
 

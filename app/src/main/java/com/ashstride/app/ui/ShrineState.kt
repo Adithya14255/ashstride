@@ -20,6 +20,11 @@ data class PastWeek(
     val progress: ChallengeProgress?,
 )
 
+/** Honor shown at the shrine. [balance] is what can still be spent. */
+data class HonorState(val earned: Int, val spent: Int, val balance: Int, val redeemedThisWeek: Int) {
+    val canRedeem: Boolean get() = com.ashstride.app.domain.HonorRules.canRedeem(balance, redeemedThisWeek)
+}
+
 /** Everything the Shrine screen and the Home teaser need. [status] is "NONE" until this week's cards exist. */
 data class ShrineState(
     val weekStart: LocalDate,

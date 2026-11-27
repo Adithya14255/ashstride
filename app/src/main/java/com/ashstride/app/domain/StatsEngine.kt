@@ -7,7 +7,7 @@ import java.time.temporal.TemporalAdjusters
 
 data class MonthTotal(val month: YearMonth, val steps: Long, val km: Double, val daysMet: Int, val days: Int)
 
-/** A Saturday-to-Friday week (same week as the weekly challenges). */
+/** A challenge week (same week as the weekly challenges: Monday to Sunday, Saturday to Friday before 30 Nov 2026). */
 data class WeekTotal(val start: LocalDate, val steps: Long)
 
 data class StatsSummary(
@@ -28,7 +28,7 @@ data class StatsSummary(
 )
 
 object StatsEngine {
-    fun weekStart(date: LocalDate): LocalDate = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SATURDAY))
+    fun weekStart(date: LocalDate): LocalDate = ChallengeGenerator.weekStartFor(date)
 
     fun summarize(days: List<LedgerDay>, today: LocalDate, monthsShown: Int = 12): StatsSummary {
         val past = days.filter { !it.date.isAfter(today) }

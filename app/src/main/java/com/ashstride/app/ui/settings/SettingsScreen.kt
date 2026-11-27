@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +26,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -48,6 +50,9 @@ import com.ashstride.app.domain.CsvResult
 import com.ashstride.app.domain.NotificationRules
 import com.ashstride.app.domain.NotifySettings
 import com.ashstride.app.notify.NotificationEngine
+import com.ashstride.app.sync.SourceLabels
+import com.ashstride.app.sync.StepSource
+import com.ashstride.app.sync.SyncPrefs
 import com.ashstride.app.ui.Fmt
 import com.ashstride.app.ui.components.BackHeader
 import com.ashstride.app.ui.components.Panel
@@ -78,6 +83,9 @@ fun SettingsScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick
     val repo = remember { BackupRepository(app) }
     val settings by np.settingsFlow.collectAsStateWithLifecycle(initialValue = NotifySettings())
     fun save(s: NotifySettings) { scope.launch { np.save(s) } }
+
+    var showSources by remember { mutableStateOf(false) }
+    var sourceList by remember { mutableStateOf<List<StepSource>>(emptyList()) }
 
     var notifOk by remember { mutableStateOf(NotificationEngine.canPost(context)) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { notifOk = NotificationEngine.canPost(context) }
@@ -155,7 +163,7 @@ fun SettingsScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick
             }
             ToggleRow("Streak at risk", "One evening nudge if today is still below goal.", settings.atRiskEnabled) { save(settings.copy(atRiskEnabled = it)) }
             if (settings.atRiskEnabled) TimeRow("Send after", settings.atRiskMinutes) { save(settings.copy(atRiskMinutes = it)) }
-            ToggleRow("The shrine opens", "Saturday: this week's three cards are ready.", settings.shrineEnabled) { save(settings.copy(shrineEnabled = it)) }
+            ToggleRow("The shrine opens", "Monday: this week's three cards are ready.", settings.shrineEnabled) { save(settings.copy(shrineEnabled = it)) }
             if (settings.shrineEnabled) TimeRow("Send after", settings.shrineMinutes) { save(settings.copy(shrineMinutes = it)) }
             ToggleRow("Milestones", "New streak and lifetime-step badges.", settings.milestonesEnabled) { save(settings.copy(milestonesEnabled = it)) }
             ToggleRow("Quiet hours", "No alerts between these times.", settings.quietEnabled) { save(settings.copy(quietEnabled = it)) }
@@ -235,6 +243,27 @@ fun SettingsScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick
         Panel {
             SectionTitle("Health Connect")
             Text(
+                "Steps are read from one primary source only, so a phone and a watch (or two apps) recording the same walk are never added together.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            val syncPrefs = remember { SyncPrefs(context) }
+            val chosen by syncPrefs.primarySourceFlow.collectAsStateWithLifecycle(initialValue = null)
+            val auto by syncPrefs.autoSourceFlow.collectAsStateWithLifecycle(initialValue = null)
+            Text(
+                "Primary source: " + when {
+                    chosen != null -> SourceLabels.label(context, chosen!!)
+                    auto != null -> SourceLabels.label(context, auto!!) + " (auto)"
+                    else -> "Auto, picked on the next sync"
+                },
+                style = MaterialTheme.typography.titleMedium,
+            )
+            OutlinedButton(onClick = {
+                scope.launch {
+                    sourceList = app.healthSync.listSources()
+                    showSources = true
+                }
+            }, modifier = Modifier.fillMaxWidth()) { Text("Choose primary source") }
+            Text(
                 "Write-back of imported history is off and stays off: writing old steps back would be counted twice by other apps.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -245,6 +274,57 @@ fun SettingsScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(8.dp))
+    }
+
+    if (showSources) {
+        val prefsForPick = SyncPrefs(context)
+        val current by prefsForPick.primarySourceFlow.collectAsStateWithLifecycle(initialValue = null)
+        fun pick(pkg: String?) {
+            showSources = false
+            scope.launch {
+                prefsForPick.setPrimarySource(pkg)
+                app.healthSync.sync()
+                toast(context, "Primary source updated")
+            }
+        }
+        AlertDialog(
+            onDismissRequest = { showSources = false },
+            title = { Text("Primary step source") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        "Only this app's steps are counted. Steps from last 14 days shown. Days already synced are re-read from the new source.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(Modifier.fillMaxWidth().clickable { pick(null) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = current == null, onClick = null)
+                        Text("Auto (the source with the most steps)", modifier = Modifier.padding(start = 12.dp))
+                    }
+                    for (src in sourceList) {
+                        Row(Modifier.fillMaxWidth().clickable { pick(src.packageName) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = current == src.packageName, onClick = null)
+                            Column(Modifier.padding(start = 12.dp)) {
+                                Text(SourceLabels.label(context, src.packageName))
+                                Text(
+                                    Fmt.n(src.steps) + " steps",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                    if (sourceList.isEmpty()) {
+                        Text(
+                            "No step sources found yet. Allow Health Connect access first, then try again.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showSources = false }) { Text("Close") } },
+        )
     }
 
     val rj = restoreJson

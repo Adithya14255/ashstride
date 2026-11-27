@@ -19,6 +19,8 @@ class SyncPrefs(private val context: Context) {
     private val lastSyncDateKey = stringPreferencesKey("last_sync_date")
     private val lastSyncEpochKey = longPreferencesKey("last_sync_epoch_ms")
     private val goalKey = intPreferencesKey("goal")
+    private val primaryKey = stringPreferencesKey("primary_source")
+    private val autoSourceKey = stringPreferencesKey("auto_source")
 
     suspend fun token(): String? = context.syncStore.data.first()[tokenKey]
     suspend fun lastSyncDate(): String? = context.syncStore.data.first()[lastSyncDateKey]
@@ -33,6 +35,34 @@ class SyncPrefs(private val context: Context) {
             it[tokenKey] = token
             it[lastSyncDateKey] = date
             it[lastSyncEpochKey] = epochMs
+        }
+    }
+
+    /** Package the person chose as the only source of steps, or null for Auto. */
+    suspend fun primarySource(): String? = context.syncStore.data.first()[primaryKey]
+    val primarySourceFlow: Flow<String?> = context.syncStore.data.map { it[primaryKey] }
+
+    /** Package Auto picked (the source with the most steps), kept until the person chooses or resets. */
+    suspend fun autoSource(): String? = context.syncStore.data.first()[autoSourceKey]
+    val autoSourceFlow: Flow<String?> = context.syncStore.data.map { it[autoSourceKey] }
+
+    suspend fun setAutoSource(pkg: String) {
+        context.syncStore.edit { it[autoSourceKey] = pkg }
+    }
+
+    /**
+     * Chooses the single source steps are read from; null goes back to Auto. The change token is dropped so the
+     * next sync re-reads every Health Connect day from this source alone.
+     */
+    suspend fun setPrimarySource(pkg: String?) {
+        context.syncStore.edit {
+            if (pkg == null) {
+                it.remove(primaryKey)
+                it.remove(autoSourceKey)
+            } else {
+                it[primaryKey] = pkg
+            }
+            it.remove(tokenKey)
         }
     }
 

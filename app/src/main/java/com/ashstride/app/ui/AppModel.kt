@@ -10,11 +10,15 @@ import com.ashstride.app.data.db.XpEvent
 import com.ashstride.app.data.seed.Seeder
 import com.ashstride.app.domain.BadgeCatalog
 import com.ashstride.app.domain.BadgeEntry
+import com.ashstride.app.domain.BadgeEvaluator
 import com.ashstride.app.domain.CareerStats
 import com.ashstride.app.domain.Challenge
 import com.ashstride.app.domain.ChallengeCodec
 import com.ashstride.app.domain.ChallengeGenerator
 import com.ashstride.app.domain.ChallengeTier
+import com.ashstride.app.domain.FeatEngine
+import com.ashstride.app.domain.FeatSummary
+import com.ashstride.app.domain.HonorRules
 import com.ashstride.app.domain.JourneyEngine
 import com.ashstride.app.domain.JourneyPosition
 import com.ashstride.app.domain.LedgerDay
@@ -23,6 +27,8 @@ import com.ashstride.app.domain.MenderRules
 import com.ashstride.app.domain.MenderStash
 import com.ashstride.app.domain.Progress
 import com.ashstride.app.domain.ProgressSnapshot
+import com.ashstride.app.domain.RewardRules
+import com.ashstride.app.domain.ShardReward
 import com.ashstride.app.domain.ShrineEngine
 import com.ashstride.app.domain.StatsEngine
 import com.ashstride.app.domain.StatsSummary
@@ -63,6 +69,7 @@ class AppModel(private val app: AshstrideApp) {
     val uiPrefs = UiPrefs(app)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val settleLock = Mutex()
+    private val rewardLock = Mutex()
 
     private val _today = MutableStateFlow(LocalDate.now())
     val today: StateFlow<LocalDate> = _today
@@ -127,8 +134,28 @@ class AppModel(private val app: AshstrideApp) {
 
     // ---- Badges and profile --------------------------------------------------------------------
 
+    // ---- Great feats and honor -----------------------------------------------------------------
+
+    /** Great feats are computed from the ledger, like badges. */
+    val feats: StateFlow<FeatSummary> =
+        ledger.map { l -> if (l.isEmpty()) FeatSummary.EMPTY else FeatEngine.evaluate(l) }
+            .flowOn(Dispatchers.Default).stateIn(scope, SharingStarted.Eagerly, FeatSummary.EMPTY)
+
+    /** Honor earned by feats minus honor already spent at the shrine (spends live in xp_event, so backups carry them). */
+    val honor: StateFlow<HonorState> =
+        combine(feats, db.xpDao().observeByType(XP_TYPE_HONOR), _today) { f, events, t ->
+            val weekStartMs = ChallengeGenerator.weekStartFor(t).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            var spent = 0
+            var thisWeek = 0
+            for (e in events) {
+                spent += e.ref?.toIntOrNull() ?: 0
+                if (e.epochMs >= weekStartMs) thisWeek += 1
+            }
+            HonorState(f.honorEarned, spent, HonorRules.balance(f.honorEarned, spent), thisWeek)
+        }.flowOn(Dispatchers.Default).stateIn(scope, SharingStarted.Eagerly, HonorState(0, 0, 0, 0))
+
     val badgeEntries: StateFlow<List<BadgeEntry>> =
-        combine(snapshot, wins) { s, w -> BadgeCatalog.entries(s?.badges ?: emptyList(), w) }
+        combine(snapshot, wins, feats) { s, w, f -> BadgeCatalog.entries(s?.badges ?: emptyList(), w, f.records) }
             .flowOn(Dispatchers.Default).stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     val mendsUsed: StateFlow<Int> =
@@ -183,6 +210,11 @@ class AppModel(private val app: AshstrideApp) {
                     settleWeeks()
                 } catch (e: Exception) {
                     // Best effort: the next change tries again.
+                }
+                try {
+                    settleRewards()
+                } catch (e: Exception) {
+                    // Best effort as well; a reward is only marked paid inside the same transaction that pays it.
                 }
             }
         }
@@ -312,6 +344,62 @@ class AppModel(private val app: AshstrideApp) {
         }
     }
 
+    /**
+     * Pays Mender Shards for the big milestones (long pure streaks, lifetime steps, distance destinations), once each.
+     * The first run only marks everything already earned as paid (see [RewardRules.PAY_BACKLOG]).
+     */
+    private suspend fun settleRewards() = withContext(Dispatchers.IO) {
+        rewardLock.withLock {
+            val ledgerNow = db.dayDao().getAll().toLedger()
+            if (ledgerNow.isEmpty()) return@withLock
+            val earned = RewardRules.earned(BadgeEvaluator.evaluate(ledgerNow), ledgerNow.sumOf { it.distanceKm })
+            val baselined = uiPrefs.rewardsBaselined()
+            val paid = ArrayList<ShardReward>()
+            db.withTransaction {
+                db.inventoryDao().insertIfAbsent(Inventory())
+                val claimed = db.xpDao().getByType(XP_TYPE_REWARD).mapNotNull { it.ref }.toSet()
+                val now = System.currentTimeMillis()
+                var shards = 0
+                for (r in earned) {
+                    if (r.id in claimed) continue
+                    db.xpDao().insert(XpEvent(epochMs = now, type = XP_TYPE_REWARD, amount = 0, ref = r.id))
+                    if (baselined || RewardRules.PAY_BACKLOG) {
+                        shards += r.shards
+                        paid.add(r)
+                    }
+                }
+                if (shards > 0) {
+                    val inv = db.inventoryDao().get() ?: Inventory()
+                    val stash = MenderRules.addShards(MenderStash(inv.shards, inv.menders), shards)
+                    db.inventoryDao().set(stash.shards, stash.menders)
+                }
+            }
+            if (!baselined) uiPrefs.setRewardsBaselined(true)
+            if (paid.isNotEmpty()) _celebrations.value = _celebrations.value + paid.map { Celebration.ShardsEarned(it) }
+        }
+    }
+
+    /** Trades [HonorRules.SHARD_COST] honor for one Mender Shard at the shrine. Re-checks everything inside one transaction. */
+    suspend fun redeemHonor(): Boolean = withContext(Dispatchers.IO) {
+        db.withTransaction {
+            db.inventoryDao().insertIfAbsent(Inventory())
+            val earned = FeatEngine.evaluate(db.dayDao().getAll().toLedger()).honorEarned
+            val events = db.xpDao().getByType(XP_TYPE_HONOR)
+            val spent = events.sumOf { it.ref?.toIntOrNull() ?: 0 }
+            val weekStartMs = ChallengeGenerator.weekStartFor(LocalDate.now()).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val usedThisWeek = events.count { it.epochMs >= weekStartMs }
+            if (!HonorRules.canRedeem(HonorRules.balance(earned, spent), usedThisWeek)) {
+                false
+            } else {
+                db.xpDao().insert(XpEvent(epochMs = System.currentTimeMillis(), type = XP_TYPE_HONOR, amount = 0, ref = HonorRules.SHARD_COST.toString()))
+                val inv = db.inventoryDao().get() ?: Inventory()
+                val stash = MenderRules.addShards(MenderStash(inv.shards, inv.menders), 1)
+                db.inventoryDao().set(stash.shards, stash.menders)
+                true
+            }
+        }
+    }
+
     // ---- Profile actions -----------------------------------------------------------------------
 
     suspend fun setProfileName(name: String) = uiPrefs.setName(name.trim().ifEmpty { UiPrefs.DEFAULT_NAME }.take(20))
@@ -377,5 +465,9 @@ class AppModel(private val app: AshstrideApp) {
 
     companion object {
         const val XP_TYPE_CHALLENGE = "CHALLENGE"
+
+        /** Zero-XP bookkeeping rows in xp_event: one per shard reward paid (ref = reward id) and one per honor spend (ref = cost). */
+        const val XP_TYPE_REWARD = "SHARD_REWARD_V2"
+        const val XP_TYPE_HONOR = "HONOR_REDEEM"
     }
 }

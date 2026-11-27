@@ -70,7 +70,7 @@ private fun starPath(cx: Float, cy: Float, rOuter: Float, rInner: Float): Path {
 /**
  * Badge art drawn in code. The rim says how it was earned: gold Pure, silver stitched Mended, bronze Lifetime,
  * and bronze / silver / gold / prismatic for Easy / Medium / Hard / Legendary challenges.
- * The centre shows a flame (streaks), a pair of peaks (lifetime steps) or a star (challenges).
+ * The centre shows a flame (streaks), a pair of peaks (lifetime steps), a star (challenges) or a spark (great feats).
  */
 @Composable
 fun BadgeArt(
@@ -121,6 +121,27 @@ fun BadgeArt(
                     peaks.lineTo(c.x + r * 0.58f, base)
                     peaks.close()
                     drawPath(peaks, art.copy(alpha = if (locked) 0.5f else 0.95f))
+                }
+                BadgeKind.FEAT -> {
+                    // A four-point spark: a single great effort, not a count of days.
+                    val spark = Path()
+                    val cy = c.y - r * 0.06f
+                    val ro = r * 0.66f
+                    val ri = r * 0.20f
+                    for (i in 0 until 8) {
+                        val rr = if (i % 2 == 0) ro else ri
+                        val a = Math.toRadians(-90.0 + 45.0 * i)
+                        val x = c.x + rr * cos(a).toFloat()
+                        val y = cy + rr * sin(a).toFloat()
+                        if (i == 0) spark.moveTo(x, y) else spark.lineTo(x, y)
+                    }
+                    spark.close()
+                    if (locked) {
+                        drawPath(spark, Cinder)
+                    } else {
+                        drawPath(spark, rimStroke)
+                        drawPath(spark, Color(0x33000000), style = Stroke(width = 1.dp.toPx(), join = StrokeJoin.Round))
+                    }
                 }
                 BadgeKind.CHALLENGE -> {
                     val star = starPath(c.x, c.y + r * 0.04f, r * 0.62f, r * 0.27f)

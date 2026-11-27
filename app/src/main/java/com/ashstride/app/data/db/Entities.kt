@@ -24,10 +24,10 @@ data class XpEvent(
     val ref: String? = null,
 )
 
-/** One row per Saturday-to-Friday challenge week. */
+/** One row per challenge week (Monday to Sunday; Saturday to Friday before 30 Nov 2026). */
 @Entity(tableName = "challenge_week")
 data class ChallengeWeek(
-    @PrimaryKey val weekStart: String, // the Saturday, yyyy-MM-dd
+    @PrimaryKey val weekStart: String, // the first day of the week, yyyy-MM-dd
     val offersJson: String,
     val picked: String? = null,
     val status: String = "OPEN", // OPEN, ACTIVE, WON, LOST

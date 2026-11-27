@@ -35,12 +35,33 @@ class ChallengeGeneratorTest {
     // ---- Calendar -------------------------------------------------------------------------
 
     @Test
-    fun weekRunsSaturdayToFriday() {
+    fun weeksRunMondayToSundayFromTheCutover() {
+        val mon = date("2026-11-30")
+        assertEquals(mon, ChallengeGenerator.weekStartFor(mon))
+        assertEquals(mon, ChallengeGenerator.weekStartFor(date("2026-12-03")))
+        assertEquals(mon, ChallengeGenerator.weekStartFor(date("2026-12-06"))) // Sun
+        assertEquals(date("2026-12-07"), ChallengeGenerator.weekStartFor(date("2026-12-07")))
+        assertEquals(date("2026-12-06"), ChallengeGenerator.weekEndFor(mon))
+        // The two days between the old Friday and the first Monday belong to the bridge week.
+        assertEquals(date("2026-11-21"), ChallengeGenerator.weekStartFor(date("2026-11-28")))
+        assertEquals(date("2026-11-21"), ChallengeGenerator.weekStartFor(date("2026-11-29")))
+        assertEquals(date("2026-11-29"), ChallengeGenerator.weekEndFor(date("2026-11-21")))
+    }
+
+    @Test
+    fun weekendIsTheLastTwoDaysOfANewWeekAndTheFirstTwoOfAnOldOne() {
+        assertEquals(listOf(date("2026-12-05"), date("2026-12-06")), ChallengeGenerator.weekendDays(date("2026-11-30")))
+        assertEquals(listOf(date("2026-11-21"), date("2026-11-22")), ChallengeGenerator.weekendDays(date("2026-11-21")))
+        assertEquals(listOf(date("2026-11-14"), date("2026-11-15")), ChallengeGenerator.weekendDays(date("2026-11-14")))
+    }
+
+    @Test
+    fun oldWeeksRanSaturdayToFriday() {
         assertEquals(date("2026-11-21"), ChallengeGenerator.weekStartFor(date("2026-11-21"))) // Sat
         assertEquals(date("2026-11-21"), ChallengeGenerator.weekStartFor(date("2026-11-22"))) // Sun
         assertEquals(date("2026-11-14"), ChallengeGenerator.weekStartFor(date("2026-11-16"))) // Mon
         assertEquals(date("2026-11-14"), ChallengeGenerator.weekStartFor(date("2026-11-20"))) // Fri
-        assertEquals(date("2026-11-27"), ChallengeGenerator.weekEndFor(date("2026-11-21")))
+        assertEquals(date("2026-11-20"), ChallengeGenerator.weekEndFor(date("2026-11-14")))
         assertEquals(java.time.DayOfWeek.SATURDAY, ChallengeGenerator.ANCHOR_SATURDAY.dayOfWeek)
     }
 

@@ -72,3 +72,10 @@ At-risk alert, shrine-open (Saturday), milestone alerts, quiet hours. Home-scree
 4 navigation shell, Home (ring, flame, XP bar, tier emblem), Streak calendar + Mend flow, Stats, Badges list, goal selector |
 5 Shrine + weekly challenges, Journey + story.json, Profile, emblem/tier/badge art, animations |
 6 notifications, widget, settings, export/import, OxygenOS battery guide, polish + release.
+
+## 13. Session 8 additions (0.7.0)
+- Steps come from one primary Health Connect source only (chosen in Settings, default Auto = most steps in 14 days).
+- Tier map screen for flame tiers and rank tiers. Flame showcase on tap.
+- Great feats (day steps, day distance, week steps ladders), honor with diminishing repeat payouts and a guaranteed floor, redeemed 100 honor per shard at the shrine (max 2 per week).
+- Mender Shards also come from long pure streaks, lifetime steps and distance destinations (5,000 km = a whole Mender). History is paid once as a backlog.
+- The challenge week is Monday to Sunday midnight from 30 Nov 2026 (the week running then is stretched to Sunday 29 Nov).

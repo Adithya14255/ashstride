@@ -47,7 +47,7 @@ object NotificationRules {
         return sentOn != today.toString()
     }
 
-    /** Saturday, after the chosen time, cards still sealed, and not yet announced for this week. */
+    /** On the first day of a new week (Monday), after the chosen time, cards still sealed, and not yet announced for this week. */
     fun shouldAlertShrine(
         s: NotifySettings,
         minuteOfDay: Int,
@@ -56,7 +56,7 @@ object NotificationRules {
         sentForWeek: String?,
     ): Boolean {
         if (!s.shrineEnabled) return false
-        if (today.dayOfWeek != DayOfWeek.SATURDAY) return false
+        if (today != ChallengeGenerator.weekStartFor(today)) return false
         if (minuteOfDay < s.shrineMinutes) return false
         if (inQuietHours(s, minuteOfDay)) return false
         if (weekStatus != WeekStatus.OPEN) return false

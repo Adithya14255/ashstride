@@ -13,7 +13,7 @@ enum class ChallengeTier(val baseXp: Int, val shards: Int, val rim: BadgeRim) {
 }
 
 enum class ChallengeType {
-    /** Most steps over the Saturday-to-Friday week. */
+    /** Most steps over the Monday-to-Sunday week. */
     WEEKLY_TOTAL,
     /** At least [Challenge.targetDays] days of [Challenge.targetSteps] or more. */
     DAYS_ABOVE,
@@ -21,7 +21,7 @@ enum class ChallengeType {
     SINGLE_DAY_PEAK,
     /** Week distance of [Challenge.targetKm]. */
     DISTANCE,
-    /** Saturday plus Sunday only. */
+    /** Saturday plus Sunday only (the weekend inside the week). */
     WEEKEND_ONLY,
     /** Most steps inside a sliding window of [Challenge.windowMinutes]. Needs hourly data. */
     CONTINUOUS_RUN,
@@ -30,7 +30,7 @@ enum class ChallengeType {
 data class Challenge(
     /** Stable id, e.g. "2026-11-21:HARD". */
     val id: String,
-    /** The Saturday this challenge's week begins. */
+    /** The day this challenge's week begins (Monday; Saturday for weeks before the switch). */
     val weekStart: LocalDate,
     val tier: ChallengeTier,
     val type: ChallengeType,
@@ -46,7 +46,7 @@ data class Challenge(
 )
 
 /**
- * Weekly challenge cards. The week runs Saturday to Friday. The same inputs always give the
+ * Weekly challenge cards. The week runs Monday to Sunday midnight (Saturday to Friday before 30 Nov 2026). The same inputs always give the
  * same three cards, so reopening the app never reshuffles them.
  */
 object ChallengeGenerator {
@@ -69,13 +69,33 @@ object ChallengeGenerator {
     private const val MAX_FACTOR = 1.15
     private const val KM_PER_STEP = 0.00077
 
-    /** The Saturday on or before [date]. */
+    /**
+     * The first Monday-to-Sunday week. Before it, weeks ran Saturday to Friday and history keeps that shape. The one
+     * Saturday-to-Friday week that was running at the switch (starting 2026-11-21) is stretched to end on Sunday
+     * 2026-11-29, so the shrine goes straight from that week to Monday 2026-11-30 with no two-day gap.
+     */
+    val WEEK_CUTOVER: LocalDate = LocalDate.of(2026, 11, 30)
+
+    /** The first day of the challenge week containing [date]: a Monday from the cutover on, a Saturday before it. */
     fun weekStartFor(date: LocalDate): LocalDate {
+        if (!date.isBefore(WEEK_CUTOVER)) return date.minusDays((date.dayOfWeek.value - 1).toLong()) // Monday
         val back = (date.dayOfWeek.value + 1) % 7 // Sat 0, Sun 1, Mon 2 ... Fri 6
-        return date.minusDays(back.toLong())
+        var start = date.minusDays(back.toLong())
+        // The Saturday-to-Friday week that would run into the cutover belongs to the bridge week before it.
+        if (!start.plusDays(6).isBefore(WEEK_CUTOVER)) start = start.minusDays(7)
+        return start
     }
 
-    fun weekEndFor(weekStart: LocalDate): LocalDate = weekStart.plusDays(6)
+    /** The last day of the week that begins on [weekStart]: Sunday for new weeks, Friday for old ones, Sunday 29 Nov for the bridge week. */
+    fun weekEndFor(weekStart: LocalDate): LocalDate {
+        if (weekStart.isBefore(WEEK_CUTOVER) && !weekStart.plusDays(13).isBefore(WEEK_CUTOVER)) return WEEK_CUTOVER.minusDays(1)
+        return weekStart.plusDays(6)
+    }
+
+    /** The Saturday and Sunday inside the first seven days of the week (the first two days of an old week, the last two of a new one). */
+    fun weekendDays(weekStart: LocalDate): List<LocalDate> =
+        (0L..6L).map { weekStart.plusDays(it) }
+            .filter { it.dayOfWeek == java.time.DayOfWeek.SATURDAY || it.dayOfWeek == java.time.DayOfWeek.SUNDAY }
 
     fun weekIndex(weekStart: LocalDate): Int =
         Math.floorDiv(ChronoUnit.DAYS.between(ANCHOR_SATURDAY, weekStart), 7L).toInt()
@@ -239,7 +259,7 @@ object ChallengeGenerator {
 
 /**
  * How often a card would have been cleared in the player's own recent weeks. The same card (same target) is
- * replayed on each of the last [MAX_WEEKS] complete Saturday-Friday weeks before the card's week.
+ * replayed on each of the last [MAX_WEEKS] complete weeks before the card's week.
  * Continuous Run needs 15-minute data that imported history does not have, so it has no odds.
  */
 object ChallengeOdds {

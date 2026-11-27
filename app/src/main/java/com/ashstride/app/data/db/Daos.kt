@@ -73,6 +73,12 @@ interface XpDao {
     @Query("SELECT * FROM xp_event")
     suspend fun getAll(): List<XpEvent>
 
+    @Query("SELECT * FROM xp_event WHERE type = :type")
+    suspend fun getByType(type: String): List<XpEvent>
+
+    @Query("SELECT * FROM xp_event WHERE type = :type")
+    fun observeByType(type: String): Flow<List<XpEvent>>
+
     @Query("DELETE FROM xp_event")
     suspend fun deleteAll()
 

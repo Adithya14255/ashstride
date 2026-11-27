@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +43,7 @@ import com.ashstride.app.domain.ChallengeText
 import com.ashstride.app.domain.WeekStatus
 import com.ashstride.app.ui.Fmt
 import com.ashstride.app.ui.Tab
+import com.ashstride.app.ui.components.FlameShowcase
 import com.ashstride.app.ui.components.FlameView
 import com.ashstride.app.ui.components.Panel
 import com.ashstride.app.ui.components.Pill
@@ -61,8 +66,9 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun HomeScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: () -> Unit, onNavigate: (Tab) -> Unit) {
+fun HomeScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: () -> Unit, onNavigate: (Tab) -> Unit, onOpenTierMap: (Int) -> Unit) {
     val model = app.model
+    var showFlame by remember { mutableStateOf(false) }
     val ledger by model.ledger.collectAsStateWithLifecycle()
     val snap by model.snapshot.collectAsStateWithLifecycle()
     val today by model.today.collectAsStateWithLifecycle()
@@ -94,7 +100,13 @@ fun HomeScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: ()
             val shownStreak by animateIntAsState(s.streak.total, tween(900), label = "streak")
             Panel(tint = flameColors(s.flame).outer) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    FlameView(s.flame, Modifier.width(150.dp).height(196.dp))
+                    FlameView(
+                        s.flame,
+                        Modifier
+                            .width(150.dp)
+                            .height(196.dp)
+                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { showFlame = true },
+                    )
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text(
@@ -110,6 +122,13 @@ fun HomeScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: ()
                             Pill("Pure ${Fmt.n(s.streak.pure)}")
                             Pill("Best ${Fmt.n(s.streak.bestTotal)}", Gold)
                         }
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Flame tiers  >",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.clickable { onOpenTierMap(0) },
+                        )
                     }
                 }
             }
@@ -243,7 +262,22 @@ fun HomeScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: ()
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Text(
+                    "Rank map  >",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.clickable { onOpenTierMap(1) },
+                )
             }
+        }
+
+        val flameNow = snap
+        if (showFlame && flameNow != null) {
+            FlameShowcase(
+                info = flameNow.flame,
+                onOpenTierMap = { showFlame = false; onOpenTierMap(0) },
+                onDismiss = { showFlame = false },
+            )
         }
 
         HealthConnectCard(app)

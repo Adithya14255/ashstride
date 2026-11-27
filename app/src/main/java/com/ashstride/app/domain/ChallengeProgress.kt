@@ -13,7 +13,7 @@ data class ChallengeProgress(val current: Double, val target: Double) {
 object ChallengeProgressEngine {
 
     /**
-     * Progress counts from the start of the challenge's week (Saturday) through Friday.
+     * Progress counts from the start of the challenge's week (Monday) through Sunday night.
      * [samples] are only needed for CONTINUOUS_RUN.
      */
     fun evaluate(
@@ -22,7 +22,8 @@ object ChallengeProgressEngine {
         samples: List<StepSample> = emptyList(),
     ): ChallengeProgress {
         val start = challenge.weekStart
-        val end = start.plusDays(6)
+        val end = ChallengeGenerator.weekEndFor(start)
+        val weekend = ChallengeGenerator.weekendDays(start).toSet()
         val week = days.filter { !it.date.isBefore(start) && !it.date.isAfter(end) }
         return when (challenge.type) {
             ChallengeType.WEEKLY_TOTAL -> {
@@ -48,7 +49,7 @@ object ChallengeProgressEngine {
             ChallengeType.WEEKEND_ONLY -> {
                 var sum = 0L
                 for (d in week) {
-                    if (d.date == start || d.date == start.plusDays(1)) sum += d.steps
+                    if (d.date in weekend) sum += d.steps
                 }
                 ChallengeProgress(sum.toDouble(), challenge.targetSteps.toDouble())
             }

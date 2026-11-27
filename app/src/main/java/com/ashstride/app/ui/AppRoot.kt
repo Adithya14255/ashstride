@@ -33,6 +33,7 @@ import com.ashstride.app.ui.journey.JourneyScreen
 import com.ashstride.app.ui.profile.ProfileScreen
 import com.ashstride.app.ui.settings.SettingsScreen
 import com.ashstride.app.ui.shrine.ShrineScreen
+import com.ashstride.app.ui.tiers.TierMapScreen
 import com.ashstride.app.ui.stats.StatsScreen
 import com.ashstride.app.ui.streak.StreakScreen
 import com.ashstride.app.ui.theme.AshDeep
@@ -51,12 +52,14 @@ enum class Tab(val label: String, val glyph: NavGlyph) {
 }
 
 /** Pages opened from Profile. NONE means the tab itself is showing. */
-enum class SubScreen { NONE, STATS, BADGES, SETTINGS }
+enum class SubScreen { NONE, STATS, BADGES, SETTINGS, TIERS }
 
 @Composable
 fun AppRoot(app: AshstrideApp) {
     var tab by rememberSaveable { mutableStateOf(Tab.HOME) }
     var sub by rememberSaveable { mutableStateOf(SubScreen.NONE) }
+    var tierTab by rememberSaveable { mutableStateOf(0) }
+    val openTierMap: (Int) -> Unit = { which -> tierTab = which; sub = SubScreen.TIERS }
     var showGoal by remember { mutableStateOf(false) }
     val goal by app.model.goal.collectAsStateWithLifecycle()
     val celebrations by app.model.celebrations.collectAsStateWithLifecycle()
@@ -101,10 +104,11 @@ fun AppRoot(app: AshstrideApp) {
                 SubScreen.STATS -> StatsScreen(app, inner, openGoal) { sub = SubScreen.NONE }
                 SubScreen.BADGES -> BadgesScreen(app, inner, openGoal) { sub = SubScreen.NONE }
                 SubScreen.SETTINGS -> SettingsScreen(app, inner, openGoal) { sub = SubScreen.NONE }
+                SubScreen.TIERS -> TierMapScreen(app, inner, tierTab, openGoal) { sub = SubScreen.NONE }
                 SubScreen.NONE -> when (tab) {
-                    Tab.HOME -> HomeScreen(app, inner, openGoal, go)
+                    Tab.HOME -> HomeScreen(app, inner, openGoal, go, openTierMap)
                     Tab.STREAK -> StreakScreen(app, inner, openGoal)
-                    Tab.SHRINE -> ShrineScreen(app, inner, openGoal)
+                    Tab.SHRINE -> ShrineScreen(app, inner, openGoal, onOpenBadges = { sub = SubScreen.BADGES }, onOpenTierMap = openTierMap)
                     Tab.JOURNEY -> JourneyScreen(app, inner, openGoal)
                     Tab.PROFILE -> ProfileScreen(app, inner, openGoal) { sub = it }
                 }

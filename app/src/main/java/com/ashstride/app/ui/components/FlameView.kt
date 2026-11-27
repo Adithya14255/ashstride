@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import com.ashstride.app.domain.FlameEngine
 import com.ashstride.app.domain.FlameInfo
 import com.ashstride.app.domain.FlameLook
 
@@ -154,4 +155,35 @@ fun FlameView(info: FlameInfo, modifier: Modifier = Modifier, halo: Boolean = tr
     Canvas(modifier) {
         drawFlame(info, sway, dance, flicker, rise, spin, halo)
     }
+}
+
+/** One short line per tier, in the order of [FLAME_TIER_NAMES]. Colour-neutral on purpose, the flame itself shows the colour. */
+val FLAME_TIER_DESCRIPTIONS: List<String> = listOf(
+    "A faint spark under the ash. Small, but it has not gone out.",
+    "The first real heat: the crystal begins to glow from within.",
+    "Open flame at last, with tongues that move on their own.",
+    "So hot it has lost its colour. The core burns almost white.",
+    "Heat turned steady and cold. A disciplined, quiet burn.",
+    "Wild and restless, spreading wherever it is fed.",
+    "A dark heart wrapped in light. It burns without fear.",
+    "Fire with teeth and wings. It no longer asks permission.",
+    "A flame that belongs to the sky, with a halo that follows it.",
+    "The fire at the end of the road. From day 100 it gains orbit rings, and from day 200 its colours never stop turning.",
+)
+
+/** Streak days the flame is showing, rebuilt from its stage. */
+fun flameTotalDays(info: FlameInfo): Int = info.stage * FlameEngine.DAYS_PER_STAGE + info.dayInStage
+
+fun flameRoman(tier: Int): String = ROMAN[tier.coerceIn(0, 9)]
+
+/** A flame as it looks in the middle of [tier], for the tier map. */
+fun flamePreviewInfo(tier: Int): FlameInfo = FlameEngine.info(tier.coerceIn(0, 9) * 10 + 5, false)
+
+fun flameTierRange(tier: Int): String =
+    if (tier >= 9) "Day 90 and beyond" else "Days ${tier * 10} to ${tier * 10 + 9}"
+
+/** Days until the flame enters the next tier, or null on the last one. */
+fun flameDaysToNextTier(info: FlameInfo): Int? {
+    val tier = flameStyle(info).tier
+    return if (tier >= 9) null else (tier + 1) * 10 - flameTotalDays(info)
 }

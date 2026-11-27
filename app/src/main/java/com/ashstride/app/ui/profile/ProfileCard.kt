@@ -121,7 +121,7 @@ private fun flavor(t: Tier): String = when (t) {
     Tier.TRAILBLAZER -> "Where you walked, others will follow."
     Tier.VANGUARD -> "The fire does not ask if you are ready."
     Tier.WARDEN -> "Keeper of the long watch and the longer road."
-    Tier.PARAGON -> "The flame learned thy name long ago."
+    Tier.PARAGON -> "The fire follows wherever you lead."
     Tier.IMMORTAL -> "Even the ashes walk beside you now."
 }
 

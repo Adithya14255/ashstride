@@ -18,18 +18,30 @@ class ShrineEngineTest {
         Challenge("2026-11-21:EASY", ws, ChallengeTier.EASY, ChallengeType.CONTINUOUS_RUN, 300, 0, BadgeRim.BRONZE, targetSteps = steps, windowMinutes = minutes)
 
     @Test
-    fun weekEndsOnFriday() {
-        assertEquals(LocalDate.of(2026, 11, 27), ShrineEngine.weekEnd(ws))
-        assertFalse(ShrineEngine.isOver(ws, LocalDate.of(2026, 11, 27)))
-        assertTrue(ShrineEngine.isOver(ws, LocalDate.of(2026, 11, 28)))
+    fun bridgeWeekEndsOnSundayBeforeTheFirstMondayWeek() {
+        // The Saturday-to-Friday week running at the switch is stretched to Sunday 29 Nov.
+        assertEquals(LocalDate.of(2026, 11, 29), ShrineEngine.weekEnd(ws))
+        assertFalse(ShrineEngine.isOver(ws, LocalDate.of(2026, 11, 29)))
+        assertTrue(ShrineEngine.isOver(ws, LocalDate.of(2026, 11, 30)))
+    }
+
+    @Test
+    fun oldWeeksEndOnFridayAndNewWeeksOnSunday() {
+        assertEquals(LocalDate.of(2026, 11, 20), ShrineEngine.weekEnd(LocalDate.of(2026, 11, 14)))
+        assertEquals(LocalDate.of(2026, 12, 6), ShrineEngine.weekEnd(LocalDate.of(2026, 11, 30)))
+        assertFalse(ShrineEngine.isOver(LocalDate.of(2026, 11, 30), LocalDate.of(2026, 12, 6)))
+        assertTrue(ShrineEngine.isOver(LocalDate.of(2026, 11, 30), LocalDate.of(2026, 12, 7)))
     }
 
     @Test
     fun daysLeftCountsTodayAndStopsAtZero() {
         assertEquals(7, ShrineEngine.daysLeft(ws, ws))
-        assertEquals(1, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 27)))
-        assertEquals(0, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 28)))
+        assertEquals(3, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 27)))
+        assertEquals(1, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 29)))
+        assertEquals(0, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 30)))
         assertEquals(7, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 20)))
+        assertEquals(7, ShrineEngine.daysLeft(LocalDate.of(2026, 11, 30), LocalDate.of(2026, 11, 30)))
+        assertEquals(1, ShrineEngine.daysLeft(LocalDate.of(2026, 11, 30), LocalDate.of(2026, 12, 6)))
     }
 
     @Test

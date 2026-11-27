@@ -58,6 +58,16 @@ class NotificationRulesTest {
     }
 
     @Test
+    fun shrineAlertOpensOnMondayFromTheCutover() {
+        val mon = LocalDate.of(2026, 11, 30)
+        assertTrue(NotificationRules.shouldAlertShrine(s, 9 * 60, mon, WeekStatus.OPEN, null))
+        assertFalse(NotificationRules.shouldAlertShrine(s, 9 * 60, mon.plusDays(1), WeekStatus.OPEN, null))
+        assertFalse(NotificationRules.shouldAlertShrine(s, 9 * 60, mon, WeekStatus.OPEN, "2026-11-30"))
+        // Saturday 28 Nov belongs to the bridge week, so no new shrine opens that day.
+        assertFalse(NotificationRules.shouldAlertShrine(s, 9 * 60, LocalDate.of(2026, 11, 28), WeekStatus.OPEN, null))
+    }
+
+    @Test
     fun clockTextAndShiftWrap() {
         assertEquals("20:00", NotificationRules.clockText(20 * 60))
         assertEquals("07:05", NotificationRules.clockText(7 * 60 + 5))

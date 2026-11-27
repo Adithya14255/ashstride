@@ -104,4 +104,11 @@ class SyncPlannerTest {
         val r = SyncPlanner.buildRow(LocalDate.of(2026, 11, 22), null, 0, 0.0, 10_000)!!
         assertEquals(0, r.steps)
     }
+
+    @Test
+    fun distanceIsEstimatedOnlyWhenTheSourceHasNone() {
+        assertEquals(7.5, SyncPlanner.kmOrEstimate(10_000, 7.5), 1e-9)
+        assertEquals(7.7, SyncPlanner.kmOrEstimate(10_000, 0.0), 1e-9)
+        assertEquals(0.0, SyncPlanner.kmOrEstimate(0, 0.0), 1e-9)
+    }
 }

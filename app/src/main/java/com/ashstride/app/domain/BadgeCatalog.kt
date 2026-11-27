@@ -2,7 +2,7 @@ package com.ashstride.app.domain
 
 import java.time.LocalDate
 
-enum class BadgeKind { STREAK, STEPS, CHALLENGE }
+enum class BadgeKind { STREAK, STEPS, CHALLENGE, FEAT }
 
 /** One badge as the UI shows it: streak and lifetime badges from the ledger, challenge badges from won weeks. */
 data class BadgeEntry(
@@ -20,6 +20,8 @@ data class BadgeEntry(
     val variantLabel: String,
     val date: LocalDate,
     val xp: Int,
+    /** Honor paid by a great feat (0 for every other badge). */
+    val honor: Int = 0,
 )
 
 data class WonChallenge(val challenge: Challenge, val date: LocalDate)
@@ -93,11 +95,26 @@ object BadgeCatalog {
         )
     }
 
+    private fun fromFeat(f: FeatRecord): BadgeEntry = BadgeEntry(
+        key = keyOf(f.def.id, BadgeVariant.STANDARD),
+        badgeId = f.def.id,
+        kind = BadgeKind.FEAT,
+        title = f.def.title,
+        glyph = f.def.glyph,
+        rim = f.def.rim,
+        stitched = false,
+        variantLabel = if (f.times > 1) "Great feat x${f.times}" else "Great feat",
+        date = f.firstDate,
+        xp = 0,
+        honor = f.honorEarned,
+    )
+
     /** Every badge earned, newest first. */
-    fun entries(awards: List<BadgeAward>, wins: List<WonChallenge>): List<BadgeEntry> {
+    fun entries(awards: List<BadgeAward>, wins: List<WonChallenge>, feats: List<FeatRecord> = emptyList()): List<BadgeEntry> {
         val all = ArrayList<BadgeEntry>()
         for (a in awards) all.add(fromAward(a))
         for (w in wins) all.add(fromWin(w))
+        for (f in feats) all.add(fromFeat(f))
         return all.sortedWith(compareByDescending<BadgeEntry> { it.date }.thenBy { it.badgeId })
     }
 }

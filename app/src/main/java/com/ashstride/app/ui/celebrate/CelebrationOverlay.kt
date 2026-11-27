@@ -44,6 +44,7 @@ import com.ashstride.app.ui.components.flameName
 import com.ashstride.app.ui.components.rimColor
 import com.ashstride.app.ui.components.tierColor
 import com.ashstride.app.ui.theme.Ember
+import com.ashstride.app.ui.theme.Gold
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -58,6 +59,7 @@ fun CelebrationOverlay(c: Celebration, onDone: () -> Unit) {
         is Celebration.FlameStage -> flameColors(c.info).mid
         is Celebration.WaypointReached -> Ember
         is Celebration.ChallengeWon -> rimColor(c.challenge.rim)
+        is Celebration.ShardsEarned -> Gold
     }
     val appear = (t.value * 1.8f).coerceIn(0f, 1f)
     val pop = 0.7f + 0.3f * appear
@@ -138,6 +140,24 @@ fun CelebrationOverlay(c: Celebration, onDone: () -> Unit) {
                             ChallengeText.rewardText(c.challenge),
                             color = MaterialTheme.colorScheme.secondary,
                             style = MaterialTheme.typography.titleMedium,
+                        )
+                    }
+                    is Celebration.ShardsEarned -> {
+                        NavIcon(NavGlyph.SHRINE, accent, filled = true, iconSize = 84.dp)
+                        Spacer(Modifier.height(20.dp))
+                        Title(if (c.reward.shards >= com.ashstride.app.domain.MenderRules.SHARDS_PER_MENDER) "A Mender is yours" else "Shards earned")
+                        Sub(c.reward.title)
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "+" + com.ashstride.app.domain.RewardRules.menderText(c.reward.shards),
+                            color = MaterialTheme.colorScheme.secondary,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            c.reward.detail,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                     }
                 }

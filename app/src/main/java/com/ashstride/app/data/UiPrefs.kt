@@ -1,6 +1,7 @@
 package com.ashstride.app.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -31,6 +32,7 @@ class UiPrefs(private val context: Context) {
     private val seenWaypointsKey = intPreferencesKey("seen_waypoints")
     private val seenResolvedKey = longPreferencesKey("seen_resolved_at")
     private val offersVersionKey = intPreferencesKey("offers_version")
+    private val rewardsBaselinedKey = booleanPreferencesKey("rewards_baselined")
 
     val nameFlow: Flow<String> = context.uiStore.data.map { it[nameKey] ?: DEFAULT_NAME }
     val titleFlow: Flow<String?> = context.uiStore.data.map { it[titleKey] }
@@ -51,6 +53,10 @@ class UiPrefs(private val context: Context) {
 
     suspend fun offersVersion(): Int = context.uiStore.data.first()[offersVersionKey] ?: 1
     suspend fun setOffersVersion(v: Int) { context.uiStore.edit { it[offersVersionKey] = v } }
+
+    /** False until the shard-reward system has run once; that first run marks past rewards as paid without paying them. */
+    suspend fun rewardsBaselined(): Boolean = context.uiStore.data.first()[rewardsBaselinedKey] ?: false
+    suspend fun setRewardsBaselined(v: Boolean) { context.uiStore.edit { it[rewardsBaselinedKey] = v } }
 
     suspend fun seen(): SeenMarks {
         val p = context.uiStore.data.first()

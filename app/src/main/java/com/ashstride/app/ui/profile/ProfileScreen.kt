@@ -266,6 +266,10 @@ fun ProfileScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick:
                 StatRow("Badges earned", "${badges.size}")
             }
 
+            Panel(modifier = Modifier.clickable { onOpen(SubScreen.TIERS) }) {
+                SectionTitle("Tier map  >")
+                Text("Every flame tier and every rank, and where you stand on each.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             Panel(modifier = Modifier.clickable { onOpen(SubScreen.BADGES) }) {
                 SectionTitle("Badges  >")
                 Text("${badges.size} earned. See them all and what is still locked.", color = MaterialTheme.colorScheme.onSurfaceVariant)

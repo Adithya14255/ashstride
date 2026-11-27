@@ -50,7 +50,7 @@ object NotificationEngine {
         )
         nm.createNotificationChannel(
             NotificationChannel(CH_SHRINE, "The shrine opens", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = "Saturday: this week's three trial cards are ready."
+                description = "Monday: this week's three trial cards are ready."
             },
         )
         nm.createNotificationChannel(
@@ -136,7 +136,7 @@ object NotificationEngine {
             if (post(app, CH_RISK, ID_RISK, "Your flame needs feeding", text)) prefs.setSentRiskDate(today.toString())
         }
 
-        // The shrine opens on Saturday.
+        // The shrine opens on Monday, the first day of the week.
         val weekStart = ChallengeGenerator.weekStartFor(today)
         val week = db.challengeDao().get(weekStart.toString())
         if (NotificationRules.shouldAlertShrine(s, minute, today, week?.status, prefs.sentShrineWeek())) {

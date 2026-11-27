@@ -55,6 +55,7 @@ fun BadgesScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
     val stats by model.stats.collectAsStateWithLifecycle()
     val goal by model.goal.collectAsStateWithLifecycle()
     val entries by model.badgeEntries.collectAsStateWithLifecycle()
+    val feats by model.feats.collectAsStateWithLifecycle()
     val dateFmt = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
     var open by remember { mutableStateOf<BadgeEntry?>(null) }
 
@@ -88,6 +89,14 @@ fun BadgesScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
                 )
             }
         }
+        for (ladder in com.ashstride.app.domain.FeatLadder.values()) {
+            for (def in com.ashstride.app.domain.FeatEngine.rungs(ladder)) {
+                if (feats.has(def.id)) continue
+                val best = feats.best(ladder)
+                val bestText = if (ladder == com.ashstride.app.domain.FeatLadder.DAY_DISTANCE) Fmt.km(best) else Fmt.n(best.toLong())
+                locked += Row2.Locked(def.title, "${def.description}  |  best $bestText  |  +${def.honor} honor", BadgeKind.FEAT, def.glyph)
+            }
+        }
         rows += Row2.Header("Locked (${locked.size})")
         rows.addAll(locked)
     }
@@ -116,7 +125,7 @@ fun BadgesScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
                             Column(Modifier.fillMaxWidth()) {
                                 Text(e.title, style = MaterialTheme.typography.titleMedium)
                                 Text(
-                                    "${e.variantLabel}  |  ${dateFmt.format(e.date)}  |  +${Fmt.n(e.xp)} XP",
+                                    "${e.variantLabel}  |  ${dateFmt.format(e.date)}  |  " + (if (e.kind == BadgeKind.FEAT) "+${Fmt.n(e.honor)} honor" else "+${Fmt.n(e.xp)} XP"),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -146,7 +155,10 @@ fun BadgesScreen(app: AshstrideApp, contentPadding: PaddingValues, onGoalClick: 
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("${shown.variantLabel} badge, earned ${dateFmt.format(shown.date)}.")
-                    Text("+${Fmt.n(shown.xp)} XP", color = MaterialTheme.colorScheme.secondary)
+                    Text(
+                        if (shown.kind == BadgeKind.FEAT) "+${Fmt.n(shown.honor)} honor so far. Honor buys Mender Shards at the shrine." else "+${Fmt.n(shown.xp)} XP",
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
                     Text(
                         "Equip it or add it to your showcase from the Profile page.",
                         style = MaterialTheme.typography.bodySmall,
