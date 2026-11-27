@@ -35,11 +35,11 @@ class ShrineEngineTest {
 
     @Test
     fun daysLeftCountsTodayAndStopsAtZero() {
-        assertEquals(7, ShrineEngine.daysLeft(ws, ws))
+        assertEquals(9, ShrineEngine.daysLeft(ws, ws)) // the bridge week is nine days long
         assertEquals(3, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 27)))
         assertEquals(1, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 29)))
         assertEquals(0, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 30)))
-        assertEquals(7, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 20)))
+        assertEquals(9, ShrineEngine.daysLeft(ws, LocalDate.of(2026, 11, 20)))
         assertEquals(7, ShrineEngine.daysLeft(LocalDate.of(2026, 11, 30), LocalDate.of(2026, 11, 30)))
         assertEquals(1, ShrineEngine.daysLeft(LocalDate.of(2026, 11, 30), LocalDate.of(2026, 12, 6)))
     }
@@ -81,7 +81,8 @@ class ShrineEngineTest {
 
     @Test
     fun onlySamplesInsideTheWeekCount() {
-        val from = ws.atStartOfDay(zone).toInstant().toEpochMilli()
+        val week = LocalDate.of(2026, 11, 30) // a seven-day Monday week
+        val from = week.atStartOfDay(zone).toInstant().toEpochMilli()
         val weekMs = 7L * 24 * 3_600_000L
         val samples = listOf(
             StepSample(from - 1, 1),
@@ -89,7 +90,7 @@ class ShrineEngineTest {
             StepSample(from + weekMs - 1, 3),
             StepSample(from + weekMs, 4),
         )
-        val kept = ShrineEngine.samplesInWeek(samples, ws, zone)
+        val kept = ShrineEngine.samplesInWeek(samples, week, zone)
         assertEquals(listOf(2, 3), kept.map { it.steps })
     }
 

@@ -366,7 +366,11 @@ fun DrawScope.drawCardFace(d: CardData, tiltX: Float, tiltY: Float, t: Float, w:
         val sw = 0.5f + 0.5f * sin(TAU * 4f * t)
         val dn = 0.5f + 0.5f * sin(TAU * 7f * t)
         val fl = 0.5f + 0.5f * sin(TAU * 17f * t)
-        inset(wl + 20f * u, wt + 70f * u, w - wr + 20f * u, h - wb + 6f * u) {
+        // The flame area is sized from the card's own box (w x h), not from the scope's size: when the card is drawn into the
+        // export sheet the scope is the whole sheet, and insetting from its edges pushed the flame off the card.
+        val flameBoxW = wr - wl - 40f * u
+        val flameBoxH = wb - wt - 64f * u
+        inset(wl + 20f * u, wt + 70f * u, size.width - (wl + 20f * u) - flameBoxW, size.height - (wt + 70f * u) - flameBoxH) {
             drawFlame(d.flame, sw, dn, fl, (t * 3f) % 1f, t, true)
         }
         // Soft prismatic foil, stronger with rank.

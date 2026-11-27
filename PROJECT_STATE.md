@@ -128,6 +128,12 @@ Known quirks carried over: picking a card late in the week can lock in progress 
 - Tests added: FeatEngineTest, RewardRulesTest, one SyncPlannerTest case.
 - To verify on device: Settings source picker lists your apps; Home steps equal the primary app's number; Tier map scrolls to your tier; showcase opens from the flame; Shrine shows Great feats panel with your retroactive honor; Badges shows feats earned and locked.
 
+## Session 8b (0.7.2: test fixes, Singularity colour stages, card export flame)
+- Test report: 4 failures, all caused by the Monday week and the 9-day bridge week (old Sat 21 Nov week now ends Sun 29 Nov). Fixed the tests; ShrineEngine.daysLeft before the week starts now returns the week length. Legendary test now picks a real Monday-week start.
+- Eternal Singularity colour stages (FlameEngine.singularityStageIndex): Golden White 90-99, Solar 100-199, then six colours of 20 days from day 200 (Crimson, Amber, Emerald, Azure, Sapphire, Orchid), repeating every 120 days from day 320. hueShiftDegrees is now stepped (0/60/120/180/240/300), not continuous. SingularityStrip shows the stages in the showcase and on the Tier X row of the tier map.
+- The gold dashed line through the flame is the mend seam (streak was repaired with a Mender). The showcase now says so.
+- Card export fix: drawCardFace used inset() from the scope size, which in the export sheet is the whole sheet, so the flame was drawn off the card. It now insets from the card's own box.
+
 ## Remaining plan
 - Fix any first-build compile errors from Session 6. Then real-world polish from using it for a week (card layout on your screen, widget size, alert timing).
 

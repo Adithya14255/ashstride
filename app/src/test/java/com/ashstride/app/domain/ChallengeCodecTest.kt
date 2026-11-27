@@ -16,7 +16,8 @@ class ChallengeCodecTest {
 
     @Test
     fun roundTripWorksForALegendaryWeekAndOtherGoals() {
-        val legendary = ws.plusWeeks(3)
+        // The first Monday-week that is a Legendary week (offers are always made for a week start).
+        val legendary = generateSequence(LocalDate.of(2026, 11, 30)) { it.plusWeeks(1) }.first { ChallengeGenerator.isLegendaryWeek(it) }
         assertTrue(ChallengeGenerator.isLegendaryWeek(legendary))
         for (goal in listOf(5_000, 12_500, 20_000)) {
             val offers = ChallengeGenerator.offersFor(legendary, emptyList(), goal, hourlyAvailable = true)

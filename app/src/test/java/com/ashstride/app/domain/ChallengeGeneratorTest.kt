@@ -315,7 +315,7 @@ class ChallengeGeneratorTest {
 
     @Test
     fun onlyDaysInsideTheWeekCount() {
-        val days = week(10_000, 10_000) + LedgerDay(date("2026-11-20"), 50_000, 0.0, 10_000) + LedgerDay(date("2026-11-28"), 50_000, 0.0, 10_000)
+        val days = week(10_000, 10_000) + LedgerDay(date("2026-11-20"), 50_000, 0.0, 10_000) + LedgerDay(date("2026-11-30"), 50_000, 0.0, 10_000)
         val p = ChallengeProgressEngine.evaluate(challenge(ChallengeType.WEEKLY_TOTAL, steps = 75_000), days)
         assertEquals(20_000.0, p.current, 0.0001)
     }

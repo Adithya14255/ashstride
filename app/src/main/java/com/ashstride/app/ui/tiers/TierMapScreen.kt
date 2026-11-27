@@ -51,6 +51,7 @@ import com.ashstride.app.ui.components.FLAME_TIER_DESCRIPTIONS
 import com.ashstride.app.ui.components.FLAME_TIER_NAMES
 import com.ashstride.app.ui.components.FlameView
 import com.ashstride.app.ui.components.Pill
+import com.ashstride.app.ui.components.SingularityStrip
 import com.ashstride.app.ui.components.SoftBar
 import com.ashstride.app.ui.components.TierEmblem
 import com.ashstride.app.ui.components.crystalPalette
@@ -207,6 +208,7 @@ private fun FlameTierRow(tier: Int, curTier: Int, total: Int, live: FlameInfo) {
                     reached -> Text("Reached", style = MaterialTheme.typography.labelSmall, color = accent)
                     else -> Text("${tier * 10 - total} day(s) to go", style = MaterialTheme.typography.labelSmall, color = Dim)
                 }
+                if (tier == 9) SingularityStrip(total)
             }
         }
     }

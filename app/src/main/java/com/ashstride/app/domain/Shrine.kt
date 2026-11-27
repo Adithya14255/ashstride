@@ -135,7 +135,7 @@ object ShrineEngine {
     /** Days left in the week counting today; 0 once the week is over. */
     fun daysLeft(weekStart: LocalDate, today: LocalDate): Int {
         if (isOver(weekStart, today)) return 0
-        if (today.isBefore(weekStart)) return 7
+        if (today.isBefore(weekStart)) return (ChronoUnit.DAYS.between(weekStart, weekEnd(weekStart)) + 1).toInt()
         return (ChronoUnit.DAYS.between(today, weekEnd(weekStart)) + 1).toInt()
     }
 

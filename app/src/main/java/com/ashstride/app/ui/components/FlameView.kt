@@ -89,13 +89,14 @@ fun crystalPalette(info: FlameInfo): CrystalPalette {
     val st = flameStyle(info)
     if (st.prismatic) {
         val h = info.hueShiftDegrees.toFloat()
+        // One clear colour per 20-day stage (see FlameEngine.singularityStageIndex), so the colour tells the stage.
         return CrystalPalette(
-            deep = hsv(h, 0.35f, 0.62f),
-            base = hsv(h, 0.26f, 1f),
-            light = hsv((h + 25f) % 360f, 0.12f, 1f),
+            deep = hsv(h, 0.62f, 0.55f),
+            base = hsv(h, 0.46f, 1f),
+            light = hsv(h, 0.22f, 1f),
             hot = Color.White,
-            glow = hsv((h + 10f) % 360f, 0.55f, 1f),
-            rim = hsv((h + 40f) % 360f, 0.25f, 1f),
+            glow = hsv(h, 0.72f, 1f),
+            rim = hsv(h, 0.38f, 1f),
             trim = Color(0xFFE6B84A),
         )
     }
@@ -168,7 +169,7 @@ val FLAME_TIER_DESCRIPTIONS: List<String> = listOf(
     "A dark heart wrapped in light. It burns without fear.",
     "Fire with teeth and wings. It no longer asks permission.",
     "A flame that belongs to the sky, with a halo that follows it.",
-    "The fire at the end of the road. From day 100 it gains orbit rings, and from day 200 its colours never stop turning.",
+    "The fire at the end of the road. From day 100 it gains orbit rings, and from day 200 it shifts to a new colour every 20 days.",
 )
 
 /** Streak days the flame is showing, rebuilt from its stage. */
@@ -187,3 +188,23 @@ fun flameDaysToNextTier(info: FlameInfo): Int? {
     val tier = flameStyle(info).tier
     return if (tier >= 9) null else (tier + 1) * 10 - flameTotalDays(info)
 }
+
+/** One colour stage of the last tier. [sampleDay] is a day on which the flame shows exactly this colour. */
+class SingularityStage(val name: String, val fromDay: Int, val toDay: Int?, val sampleDay: Int) {
+    val range: String get() = if (toDay == null) "$fromDay+" else "$fromDay-$toDay"
+}
+
+/** The eight colour stages of Eternal Singularity, in order. The six prismatic colours repeat every 120 days from day 320. */
+val SINGULARITY_STAGES: List<SingularityStage> = listOf(
+    SingularityStage("Golden White", 90, 99, 90),
+    SingularityStage("Solar", 100, 199, 100),
+    SingularityStage("Crimson", 200, 219, 200),
+    SingularityStage("Amber", 220, 239, 220),
+    SingularityStage("Emerald", 240, 259, 240),
+    SingularityStage("Azure", 260, 279, 260),
+    SingularityStage("Sapphire", 280, 299, 280),
+    SingularityStage("Orchid", 300, 319, 300),
+)
+
+/** The colour a stage actually shows on the flame. */
+fun singularityStageColor(stage: SingularityStage): Color = crystalPalette(FlameEngine.info(stage.sampleDay, false)).glow

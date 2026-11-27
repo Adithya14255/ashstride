@@ -49,7 +49,14 @@ class FlameEngineTest {
         val at200 = FlameEngine.info(200, false)
         assertEquals(FlameLook.PRISMATIC, at200.look)
         assertEquals(0, at200.hueShiftDegrees)
-        assertEquals(3, FlameEngine.info(201, false).hueShiftDegrees)
+        // One colour for each 20-day stage: red, yellow, green, cyan, blue, magenta, then round again.
+        assertEquals(0, FlameEngine.info(219, false).hueShiftDegrees)
+        assertEquals(60, FlameEngine.info(220, false).hueShiftDegrees)
+        assertEquals(120, FlameEngine.info(240, false).hueShiftDegrees)
+        assertEquals(240, FlameEngine.info(299, false).hueShiftDegrees)
+        assertEquals(300, FlameEngine.info(300, false).hueShiftDegrees)
+        assertEquals(0, FlameEngine.info(320, false).hueShiftDegrees)
+        assertEquals(60, FlameEngine.info(340, false).hueShiftDegrees)
         assertEquals(0, FlameEngine.info(199, false).hueShiftDegrees)
         assertTrue(FlameEngine.info(251, false).solarLayers > FlameEngine.info(200, false).solarLayers)
     }
@@ -67,5 +74,23 @@ class FlameEngineTest {
     fun mendSeamFollowsTheRun() {
         assertTrue(FlameEngine.info(251, true).hasMendSeam)
         assertFalse(FlameEngine.info(118, false).hasMendSeam)
+    }
+
+    @Test
+    fun singularityStagesAndDaysToTheNextColour() {
+        assertEquals(-1, FlameEngine.singularityStageIndex(89))
+        assertEquals(0, FlameEngine.singularityStageIndex(90))
+        assertEquals(0, FlameEngine.singularityStageIndex(99))
+        assertEquals(1, FlameEngine.singularityStageIndex(100))
+        assertEquals(1, FlameEngine.singularityStageIndex(199))
+        assertEquals(2, FlameEngine.singularityStageIndex(200))
+        assertEquals(6, FlameEngine.singularityStageIndex(291)) // Sapphire, days 280 to 299
+        assertEquals(7, FlameEngine.singularityStageIndex(300))
+        assertEquals(2, FlameEngine.singularityStageIndex(320)) // the six colours start again
+        assertEquals(null, FlameEngine.singularityDaysToNext(50))
+        assertEquals(10, FlameEngine.singularityDaysToNext(90))
+        assertEquals(1, FlameEngine.singularityDaysToNext(199))
+        assertEquals(20, FlameEngine.singularityDaysToNext(200))
+        assertEquals(9, FlameEngine.singularityDaysToNext(291))
     }
 }
